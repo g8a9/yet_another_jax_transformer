@@ -22,6 +22,7 @@ There exist excellent walkthroughs on the Transformer architecture (e.g., [\[1\]
 
 The content of this book was originally devised as NLP tutorial of the second [Mediterranean Machine Learning Summer School](https://www.m2lschool.org/past-editions/m2l-2022) by the AI Education Foundation.
 
+## Index
 
 ```{tableofcontents}
 ```
