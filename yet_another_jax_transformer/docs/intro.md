@@ -2,6 +2,10 @@
 
 Following along this book, you will implement every component of the Transformer architecture in JAX. There won't be no tricks or custom things, we will stick to the design as detailed in the *Attention Is All You Need* [paper](https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf). 
 
+```{warning}
+The document is currently WIP 🙃
+```
+
 
 ## Why YAJT? 
 
