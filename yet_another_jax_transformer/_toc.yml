@@ -1,0 +1,10 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: docs/intro
+chapters:
+- file: docs/01_introduction_to_the_architecture/intro
+# - file: 02_implementing_core_components/intro.md
+#   sections:
+#   - file: 02_implementing_core_components/attention.md
