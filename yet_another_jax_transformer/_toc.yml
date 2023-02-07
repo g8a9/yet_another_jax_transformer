@@ -21,3 +21,6 @@ chapters:
   - file: docs/04_transformer_decoder/preparation_MT
   - file: docs/04_transformer_decoder/training_MT
   - file: docs/04_transformer_decoder/quantitative_evaluation
+- file: docs/05_gender_bias_in_MT/intro
+  sections:
+  - file: docs/05_gender_bias_in_MT/representational_harm
