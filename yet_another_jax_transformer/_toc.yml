@@ -15,3 +15,9 @@ chapters:
   - file: docs/03_transformer_encoder/encoder
   - file: docs/03_transformer_encoder/language_modeling
   - file: docs/03_transformer_encoder/sentiment_analysis
+- file: docs/04_transformer_decoder/intro
+  sections:
+  - file: docs/04_transformer_decoder/decoder
+  - file: docs/04_transformer_decoder/preparation_MT
+  - file: docs/04_transformer_decoder/training_MT
+  - file: docs/04_transformer_decoder/quantitative_evaluation
