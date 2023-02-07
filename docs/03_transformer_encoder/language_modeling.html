@@ -1,0 +1,920 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>🚀 Training your First Language Model &#8212; Yet Another (JAX) Transformer</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Fine-Tuning for Sentiment Classification" href="sentiment_analysis.html" />
+    <link rel="prev" title="Combining all together: the Transformer Encoder" href="encoder.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-NWJV81P0BZ"></script>
+<script>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){ dataLayer.push(arguments); }
+                    gtag('js', new Date());
+                    gtag('config', 'G-NWJV81P0BZ');
+                </script>
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Yet Another (JAX) Transformer</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Yet Another (JAX) Transformer
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../01_introduction_to_the_architecture/intro.html">
+   1️⃣ Introduction to The Transformer Architecture
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../02_core_components/intro.html">
+   2️⃣ Implementing the Core Components
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/attention.html">
+     Attention Mechanism in the Transformer
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/multi_headed_attention.html">
+     The Multi-Headed Attention
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/embedding_positional.html">
+     Turning Tokens into Vectors: Embeddings and Positional Encoding
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="intro.html">
+   3️⃣ Transformer Encoder and Word-level Language Modeling
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="encoder.html">
+     Combining all together: the Transformer Encoder
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     🚀 Training your First Language Model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="sentiment_analysis.html">
+     Fine-Tuning for Sentiment Classification
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/03_transformer_encoder/language_modeling.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../../_sources/docs/03_transformer_encoder/language_modeling.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tatoeba-dataset">
+   Tatoeba dataset
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-a-bpe-tokenizer">
+   Training a BPE Tokenizer
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#data-preparation">
+   Data preparation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#defining-a-language-model-with-a-jax-haiku-transform">
+   Defining a Language Model (with a JAX/Haiku Transform)
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-accessories">
+   Training accessories 💍
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#the-training-loop">
+   The Training Loop
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>🚀 Training your First Language Model</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tatoeba-dataset">
+   Tatoeba dataset
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-a-bpe-tokenizer">
+   Training a BPE Tokenizer
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#data-preparation">
+   Data preparation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#defining-a-language-model-with-a-jax-haiku-transform">
+   Defining a Language Model (with a JAX/Haiku Transform)
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-accessories">
+   Training accessories 💍
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#the-training-loop">
+   The Training Loop
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section class="tex2jax_ignore mathjax_ignore" id="training-your-first-language-model">
+<h1>🚀 Training your First Language Model<a class="headerlink" href="#training-your-first-language-model" title="Permalink to this headline">#</a></h1>
+<p>Before starting, let us recap the object required to pre-train the Transformer encoder:</p>
+<ul class="simple">
+<li><p>✅ <strong>Model</strong>: Transformer Encoder (which we already implemented)</p></li>
+<li><p>📝 <strong>Dataset</strong>: As the training objective is token-level MLM, we can use any text corpus. In our case, we will use a toy dataset derived from Tatoeba.</p></li>
+<li><p>📝 <strong>Tokenizer</strong>: We need a tokenizer that takes a string and returns a list of tokens. It is in charge of splitting the input text into tokens and mapping each token to a unique integer index. We are going to use the <code class="docutils literal notranslate"><span class="pre">BPE</span></code> <a class="reference external" href="https://huggingface.co/course/chapter6/5">(byte pair encoding)</a> tokenizer provided by the <a class="reference external" href="https://huggingface.co/docs/tokenizers/index">tokenizers</a> library.</p></li>
+<li><p>📝 <strong>Training loop</strong>: We need a training loop that iterates over the dataset, computes the loss, back-propagates the gradients, and updates the parameters.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># some global variables</span>
+<span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">MASK_PROBABILITY</span> <span class="o">=</span> <span class="mf">0.15</span>
+<span class="n">NUM_LAYERS</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">NUM_HEADS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">D_MODEL</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">D_FF</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">P_DROPOUT</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MAX_SEQ_LEN</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">VOCAB_SIZE</span> <span class="o">=</span> <span class="mi">25000</span>
+<span class="n">LEARNING_RATE</span> <span class="o">=</span> <span class="mf">3e-4</span>
+<span class="n">GRAD_CLIP_VALUE</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<section id="tatoeba-dataset">
+<h2>Tatoeba dataset<a class="headerlink" href="#tatoeba-dataset" title="Permalink to this headline">#</a></h2>
+<p><a class="reference external" href="https://tatoeba.org/">Tatoeba</a> is an open and collaborative platform for collecting translations in different languages. It is an excellent resource for machine translation tasks.</p>
+<p><img alt="image" src="https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/tatoeba_example.png" /></p>
+<p>For our toy example, we will use a small subset of the Tatoeba dataset consisting of aligned sentence pairs in Italian and English.</p>
+<p>We only need the English sentences from the dataset to train our Transformer encoder. The English-Italian sentence pairs will be used in the next section when we train a Transformer encoder-decoder.</p>
+<p>You can download the dataset by running the following cell.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -LO https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/it-en.tsv
+</pre></div>
+</div>
+<p>It will download a <code class="docutils literal notranslate"><span class="pre">tsv</span></code> file named <code class="docutils literal notranslate"><span class="pre">it-en.tsv</span></code>. We can load it using <code class="docutils literal notranslate"><span class="pre">pandas</span></code> and collect only the English sentences we will use for our MLM pre-training.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+    <span class="s2">&quot;it-en.tsv&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id_it&quot;</span><span class="p">,</span> <span class="s2">&quot;sent_it&quot;</span><span class="p">,</span> <span class="s2">&quot;id_en&quot;</span><span class="p">,</span> <span class="s2">&quot;sent_en&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+<span class="c1"># We will use english sentences to train our encoder with MLM</span>
+<span class="n">en_sentences</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;sent_en&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unique English sentences: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">en_sentences</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Samples:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">en_sentences</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="training-a-bpe-tokenizer">
+<h2>Training a BPE Tokenizer<a class="headerlink" href="#training-a-bpe-tokenizer" title="Permalink to this headline">#</a></h2>
+<p>Before starting training our Transformer model, we need to train a tokenizer that we will use to split the input text into tokens. The <em>tokenizers</em> library provides many tokenizers, including the <code class="docutils literal notranslate"><span class="pre">BPE</span></code> tokenizer we will use.</p>
+<p>BPE tokenization involves the following steps:</p>
+<ol class="simple">
+<li><p>The corpus is split to obtain a set of characters.</p></li>
+<li><p>Pairs of characters are combined to form sub-words according to some frequency metric.</p></li>
+<li><p>Process at 2. is repeated until the condition on the maximum number of sub-words in the vocabulary is met.</p></li>
+<li><p>The vocabulary is generated by taking the final set of sub-words.</p></li>
+</ol>
+<p>We need a <code class="docutils literal notranslate"><span class="pre">VOCAB_SIZE</span></code> parameter that defines our vocabulary’s maximum capacity (number of tokens). We will also leverage another global variable, <code class="docutils literal notranslate"><span class="pre">MAX_SEQ_LENGTH</span></code>, that sets the maximum sentence length to a fixed number of tokens.</p>
+<p>🚨🚨🚨</p>
+<p>We usually refer to <strong>tokens</strong> instead of words when training NLP models. Indeed, tokenization involves splitting the text into smaller units, but the latter are not necessarily words. For example, in our case, the tokenizer will split the text into sub-words.</p>
+</section>
+<section id="data-preparation">
+<h2>Data preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline">#</a></h2>
+<p>We have the model ✅ and the tokenizer ✅, and we must prepare the training and validation datasets.
+To do so, we split the dataset into two parts: a training set containing 80% of the original corpus and a validation set containing the remaining 20%.</p>
+<p>We also use the <code class="docutils literal notranslate"><span class="pre">DatasetDict</span></code> class from <code class="docutils literal notranslate"><span class="pre">datasets</span></code> package to store the training and validation sets. This class provides many methods to manipulate the data efficiently. For example, we can run a pre-processing step to pre-tokenize the text and avoid running the tokenizer during training.</p>
+<p>The tokenizer maps each token to an index in the vocabulary creating the <code class="docutils literal notranslate"><span class="pre">input_ids</span></code> vector. The expected output is a vector of the same length as <code class="docutils literal notranslate"><span class="pre">input_ids</span></code> but containing the index of the target tokens.</p>
+<p><strong>Masked Language Modeling (MLM)</strong></p>
+<p>Masked language modeling (MLM) is the task of randomly masking some words in the input and asking the model to guess the original word. It is a <em>self-supervised</em> objective that one can use to train the model without any labeled data. Indeed, the expected output for each masked word is simply the index of the original word. Let’s see a simple example of MLM below.</p>
+<p><img alt="image" src="https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/MLM.png" /></p>
+<p>For training the model, we chose to mask 15% of the tokens in the training set. Given a sentence, we randomly decide to mask a token, and we replace it with the special token <code class="docutils literal notranslate"><span class="pre">[MASK]</span></code>. The model is then trained to predict the original token.</p>
+<p>Using the MLM objective, <strong>we use as labels the original token ids</strong>. During the tokenization step, we set the expected output (e.g., <code class="docutils literal notranslate"><span class="pre">labels</span></code> vector) as the original token ids (<code class="docutils literal notranslate"><span class="pre">input_ids</span></code>). During training, we will randomly mask some tokens and let the model try to predict the original token ids.
+The <em>collate</em> function (<code class="docutils literal notranslate"><span class="pre">collate_fn</span></code>) will be responsible for this masking step.</p>
+<p>🚨 Given the computational resources required for running the pre-training, we only sample 5% of the TatoEBA collection.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DATASET_SAMPLE</span> <span class="o">=</span> <span class="mf">0.05</span> 
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;sent_en&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+
+<span class="c1"># sample to ease compute</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="n">DATASET_SAMPLE</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="n">train_df</span><span class="p">,</span> <span class="n">val_df</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">train_size</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Train&quot;</span><span class="p">,</span> <span class="n">train_df</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;Valid&quot;</span><span class="p">,</span> <span class="n">val_df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="n">raw_datasets</span> <span class="o">=</span> <span class="n">DatasetDict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">train_df</span><span class="o">.</span><span class="n">tolist</span><span class="p">()}),</span>
+        <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">val_df</span><span class="o">.</span><span class="n">tolist</span><span class="p">()}),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function tokenizes the input sentences and adds the special tokens.</span>
+<span class="sd">    :param examples: The input sentences.</span>
+<span class="sd">    :return: The tokenized sentences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode_batch</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">ids</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span>
+        <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">attention_mask</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span>
+        <span class="s2">&quot;special_tokens_mask&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">special_tokens_mask</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span>
+        <span class="c1"># &quot;labels&quot;: [o.ids for o in out], # we don&#39;t need labels!</span>
+    <span class="p">}</span>
+
+
+<span class="n">proc_datasets</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+    <span class="n">preprocess</span><span class="p">,</span> <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">remove_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">collate_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collate function that prepares the input for the MLM language modeling task.</span>
+<span class="sd">    The input tokens are masked according to the MASK_PROBABILITY to generate the &#39;labels&#39;.</span>
+
+<span class="sd">    EXERCISE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">])</span>
+    <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">])</span>
+    <span class="n">special_tokens_mask</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;special_tokens_mask&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">special_tokens_mask</span> <span class="o">=</span> <span class="n">special_tokens_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+    <span class="n">masked_indices</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">),</span> <span class="n">MASK_PROBABILITY</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+    <span class="n">masked_indices</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">special_tokens_mask</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">masked_indices</span><span class="p">)</span>
+
+    <span class="c1"># Set labels to -100 for non-[MASK] tokens (we will use this while defining the loss function)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">masked_indices</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">masked_indices</span><span class="p">,</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">token_to_id</span><span class="p">(</span><span class="s2">&quot;[MASK]&quot;</span><span class="p">),</span> <span class="n">input_ids</span><span class="p">)</span>
+
+    <span class="n">item</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">,</span>
+        <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+            <span class="n">attention_mask</span><span class="p">,</span> <span class="mi">1</span>
+        <span class="p">),</span>  <span class="c1"># attention mask must be broadcastable to (B,...,S,S)!</span>
+        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">item</span>
+
+
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span>
+<span class="p">)</span>
+<span class="n">valid_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;valid&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>In the last cell, we used <code class="docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code>. A <strong>dataloader</strong> is a container that provides an iterable interface over a dataset. It handles the batching and shuffling and is useful for providing data to the training and validation loops. It also provides a specific parameter to use a <code class="docutils literal notranslate"><span class="pre">collate_fn</span></code> which is the function that handles the creation of the batches. In our example, this is where we randomly mask some tokens for the MLM objective.</p>
+</section>
+<section id="defining-a-language-model-with-a-jax-haiku-transform">
+<h2>Defining a Language Model (with a JAX/Haiku Transform)<a class="headerlink" href="#defining-a-language-model-with-a-jax-haiku-transform" title="Permalink to this headline">#</a></h2>
+<p>At this point, we have the model ✅, the tokenizer ✅, and the data for training and validation ✅. The next step is to define the training loop and all the steps that need to be done inside it.</p>
+<p>Similarly to each component of the mode, we will implement the training loop using <a class="reference external" href="https://github.com/deepmind/dm-haiku">Haiku</a>. Before implementing our model let’s first recall a very important concept in JAX/Haiku: <strong>the model must be a pure function</strong>. This means that it cannot access any data that is not passed to it. This is a very powerful concept because it makes it really easy to parallelize your model and it allows for automatic differentiation 💪.</p>
+<p>Thanks to the <code class="docutils literal notranslate"><span class="pre">hk.transform</span></code> module, we can define a function <code class="docutils literal notranslate"><span class="pre">mlm_language_model</span></code> that takes as input the <code class="docutils literal notranslate"><span class="pre">input_ids</span></code> and the <code class="docutils literal notranslate"><span class="pre">mask</span></code> and runs the model. It also takes as input a flag <code class="docutils literal notranslate"><span class="pre">is_train</span></code> that indicates whether we are training or evaluating the model. This is important because we need to know when to use the <code class="docutils literal notranslate"><span class="pre">dropout</span></code> operations (i.e., only during training).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@hk</span><span class="o">.</span><span class="n">transform</span>
+<span class="k">def</span> <span class="nf">mlm_language_model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MLM language model as an haiku pure transformation.</span>
+<span class="sd">    :param input_ids: The input token ids.</span>
+<span class="sd">    :param mask: The attention mask.</span>
+<span class="sd">    :param is_train: Whether the model is in training mode.</span>
+<span class="sd">    :return: The logits corresponding to the output of the model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    EXERCISE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pe</span> <span class="o">=</span> <span class="n">PositionalEncoding</span><span class="p">(</span><span class="n">D_MODEL</span><span class="p">,</span> <span class="n">MAX_SEQ_LEN</span><span class="p">,</span> <span class="n">P_DROPOUT</span><span class="p">)</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">Embeddings</span><span class="p">(</span><span class="n">D_MODEL</span><span class="p">,</span> <span class="n">VOCAB_SIZE</span><span class="p">)</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">TransformerEncoder</span><span class="p">(</span><span class="n">NUM_LAYERS</span><span class="p">,</span> <span class="n">NUM_HEADS</span><span class="p">,</span> <span class="n">D_MODEL</span><span class="p">,</span> <span class="n">D_FF</span><span class="p">,</span> <span class="n">P_DROPOUT</span><span class="p">)</span>
+
+    <span class="c1"># get input token embeddings</span>
+    <span class="n">input_embs</span> <span class="o">=</span> <span class="n">embeddings</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_embs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">input_embs</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">input_embs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># (1,MAX_SEQ_LEN,D_MODEL)</span>
+
+    <span class="c1"># sum positional encodings</span>
+    <span class="n">input_embs</span> <span class="o">=</span> <span class="n">pe</span><span class="p">(</span><span class="n">input_embs</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>  <span class="c1"># (B,MAX_SEQ_LEN,d_model)</span>
+
+    <span class="c1"># encode using the transformer encoder stack</span>
+    <span class="n">output_embs</span> <span class="o">=</span> <span class="n">encoder</span><span class="p">(</span><span class="n">input_embs</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>
+
+    <span class="c1"># decode each position into a probability distribution over vocabulary tokens</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">D_MODEL</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dec_lin_1&quot;</span><span class="p">)(</span><span class="n">output_embs</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span>
+        <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">param_axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dec_norm&quot;</span>
+    <span class="p">)(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">VOCAB_SIZE</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dec_lin_2&quot;</span><span class="p">)(</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># logits</span>
+    <span class="k">return</span> <span class="n">out</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># testing the LM</span>
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Hello my friend&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span> <span class="c1"># encode a sentence</span>
+<span class="n">rng_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span> <span class="c1"># get a new random key</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">minval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxval</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># create a mask</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">mlm_language_model</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="c1"># initialize the model</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">mlm_language_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span> <span class="c1"># apply the model to the input sentence encoded at the previous step</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># output should be of shape (1,MAX_SEQ_LEN,VOCAB_SIZE)</span>
+</pre></div>
+</div>
+</section>
+<section id="training-accessories">
+<h2>Training accessories 💍<a class="headerlink" href="#training-accessories" title="Permalink to this headline">#</a></h2>
+<p>Before writing the training loop, we need to define some accessories used during the training. These accessories include the <strong>training state</strong> (e.g., the mode parameters and the optimizer state), the <strong>loss function</strong>, and the <strong>train and evaluation steps</strong>.</p>
+<p><strong>Training state</strong></p>
+<p>The training state will allow us to keep track of the training progress and contains all the information we need, e.g., the model parameters and the optimizer. Implementing the model using JAX makes it easy to define a training state.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TrainingState</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The training state is a named tuple containing the model parameters and the optimizer state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span> <span class="c1"># model parameters</span>
+    <span class="n">opt_state</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">OptState</span> <span class="c1"># optimizer state</span>
+</pre></div>
+</div>
+<p>Before running the actual training, we need to initialize the network (you have already seen this when testing the previous modules) and an optimizer.</p>
+<p>We will use the <code class="docutils literal notranslate"><span class="pre">Adam</span></code> optimizer, which is a gradient-based optimization algorithm that adapts the learning rate based on the estimated first and second moments of the gradients. It is a very popular optimization algorithm and has shown great results in practice.</p>
+<p><strong>Resources</strong></p>
+<ul class="simple">
+<li><p>Adam optimizer: <a class="reference external" href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialise network and optimiser; note we draw an input to get shapes.</span>
+<span class="n">sample</span> <span class="o">=</span> <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+    <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="n">rng_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">init_params</span> <span class="o">=</span> <span class="n">mlm_language_model</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">clip_by_global_norm</span><span class="p">(</span><span class="n">GRAD_CLIP_VALUE</span><span class="p">),</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">LEARNING_RATE</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">init_opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+
+<span class="c1"># initialize the training state class</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">TrainingState</span><span class="p">(</span><span class="n">init_params</span><span class="p">,</span> <span class="n">init_opt_state</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Loss Function</strong></p>
+<p>The loss function is the objective that we want to minimize during training. In general, the loss function needs to be differentiable to compute the gradient of the error using automatic differentiation. In our case, we will use the <em>Cross Entropy</em> loss traditionally used for classification tasks. The <code class="docutils literal notranslate"><span class="pre">optax</span></code> library has a function that allows us to easily define the loss function (<a class="reference external" href="https://optax.readthedocs.io/en/latest/api.html#optax.softmax_cross_entropy_with_integer_labels">see the docs here</a>).</p>
+<p>🚨🚨🚨</p>
+<p>While implementing the loss function, make sure to carefully manage <em>padding</em>. You may not want to consider the padding positions when calculating the loss function. Thus, the loss function should only consider the valid positions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The loss function for the MLM language modeling task.</span>
+<span class="sd">    It computes the cross entropy loss between the logits and the labels.</span>
+
+<span class="sd">    :param params: The model parameters.</span>
+<span class="sd">    :param batch: The batch of data.</span>
+<span class="sd">    :param rng: The random number generator.</span>
+<span class="sd">    :return: The value of the loss computed on the batch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">mlm_language_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+        <span class="n">input_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">],</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>    
+    
+    <span class="n">label_mask</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="c1"># if the number is negative, jax.nn.one_hot() return a jnp.zeros(VOCAB_SIZE)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span> <span class="n">VOCAB_SIZE</span><span class="p">))</span> <span class="o">*</span> <span class="n">label_mask</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">loss</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+    
+    <span class="c1"># take average</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">label_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span>
+</pre></div>
+</div>
+<p><strong>Training and Evaluation steps</strong></p>
+<p>The training and evaluation steps are the core of the training loop. They implement the training loop logic.</p>
+<p><strong>Training step</strong>: For each batch, it should (i) forward propagate the batch through the model, (ii) compute the loss and the gradient and then (iii) update the model parameters using the optimizer.</p>
+<p><strong>Evaluation step</strong>: For each batch, it should (i) forward propagate the batch through the model and then (ii) compute and return the loss that corresponds to the current model parameters.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingState</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The training step function. It computes the loss and gradients, and updates the model parameters.</span>
+<span class="sd">    </span>
+<span class="sd">    :param state: The training state.</span>
+<span class="sd">    :param batch: The batch of data.</span>
+<span class="sd">    :param rng_key: The key for the random number generator.</span>
+<span class="sd">    :return: The updated training state, the metrics (training loss) and the random number generator key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng_key</span><span class="p">,</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rng_key</span><span class="p">)</span>
+
+    <span class="n">loss_and_grad_fn</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">)</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">loss_and_grad_fn</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span>
+
+    <span class="n">updates</span><span class="p">,</span> <span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">opt_state</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">apply_updates</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+
+    <span class="n">new_state</span> <span class="o">=</span> <span class="n">TrainingState</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">opt_state</span><span class="p">)</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">new_state</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">rng_key</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The evaluation step function. It computes the loss on the batch.</span>
+<span class="sd">    </span>
+<span class="sd">    :param params: The model parameters.</span>
+<span class="sd">    :param batch: The batch of data.</span>
+<span class="sd">    :return: The value of the loss computed on the batch.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">without_apply_rng</span><span class="p">(</span><span class="n">mlm_language_model</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">input_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">],</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">label_mask</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="c1"># if the number is negative, jax.nn.one_hot() return a jnp.zeros(VOCAB_SIZE)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span> <span class="n">VOCAB_SIZE</span><span class="p">))</span> <span class="o">*</span> <span class="n">label_mask</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">loss</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+    <span class="c1"># take average</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">label_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span>
+</pre></div>
+</div>
+</section>
+<section id="the-training-loop">
+<h2>The Training Loop<a class="headerlink" href="#the-training-loop" title="Permalink to this headline">#</a></h2>
+<p>The training loop will execute the training and evaluation steps by iterating over the training and validation datasets. It relies on hyperparameters such as the number of epochs <code class="docutils literal notranslate"><span class="pre">EPOCHS</span></code> and the number of steps between each evaluation <code class="docutils literal notranslate"><span class="pre">EVAL_STEPS</span></code> (you typically do not want to wait until the end of the epoch to assess your model, nor do it so often that the training slows down).</p>
+<p><strong>Checkpointing</strong></p>
+<p>The training loop also includes the checkpointing logic, which saves the model parameters to disk at each evaluation step if the loss on the evaluation has improved.</p>
+<p><strong>Debugging</strong></p>
+<p>Unfortunately, debugging JIT-ed code (as the one we are using within our training loop) can be pretty tricky. It is because JAX compiles the functions before executing them, so it is impossible to set breakpoints or print traces.
+If you want to set checkpoints or print variables, you can comment out <code class="docutils literal notranslate"><span class="pre">&#64;jax.jit</span></code> from either your <code class="docutils literal notranslate"><span class="pre">train_step</span></code> or <code class="docutils literal notranslate"><span class="pre">eval_step</span></code> definitions.</p>
+<p>Read <a class="reference external" href="https://github.com/google/jax/issues/196">here</a> why you cannot print in JIT-compiled functions.</p>
+<p><strong>Experiment tracking</strong></p>
+<p>Tracking is your training dynamics if fundamental to inspect if any bug occurs or everything proceeds as expected. Today, many tracking tools expose handy API to streamline experiment tracking. Today, we will use Tensorboard, which is easy to integrate into Jupyter Lab / Google Colab.</p>
+<p>First, we set a <code class="docutils literal notranslate"><span class="pre">LOG_STEPS</span></code> variable responsible for tracking the training loss for each fixed number of steps. Then, we use a <code class="docutils literal notranslate"><span class="pre">SummaryWriter</span></code> object to log metrics every <code class="docutils literal notranslate"><span class="pre">LOG_STEPS</span></code>. Finally, we can observe our logged metrics by opening a dedicated tab within a notebook cell: execute the following cell to load the tensorboard extension (if you are running the notebook locally, you have to install tensorboard beforehand) and open it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The training loop</span>
+<span class="c1"># It is a simple for loop that iterates over the training set and evaluates on the validation set.</span>
+
+<span class="c1"># The hyperparameters used for training and evaluation</span>
+<span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">30</span>  <span class="c1"># @param {type:&quot;number&quot;}</span>
+<span class="n">EVAL_STEPS</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># @param {type:&quot;number&quot;}</span>
+<span class="n">MAX_STEPS</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># @param {type:&quot;number&quot;}</span>
+<span class="n">LOG_STEPS</span> <span class="o">=</span> <span class="mi">200</span>
+
+<span class="n">writer</span> <span class="o">=</span> <span class="n">SummaryWriter</span><span class="p">()</span>
+<span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Train step&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">EPOCHS</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">loop_metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;eval_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+<span class="n">best_eval_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
+
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+
+        <span class="n">state</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">rng_key</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span>
+        <span class="n">loop_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Evaluation loop, no optimization is involved here.</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">EVAL_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ebar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Eval step&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">losses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">valid_loader</span><span class="p">:</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">eval_step</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+                <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+                <span class="n">ebar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ebar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="n">eval_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_loss</span>
+
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/valid&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">eval_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">best_eval_loss</span><span class="p">:</span>
+                <span class="n">best_eval_loss</span> <span class="o">=</span> <span class="n">eval_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="c1"># Save the params training state (and params) to disk</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ckpt_train_state_</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">LOG_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/train&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span><span class="n">loop_metrics</span><span class="p">)</span>
+
+<span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Once concluded the training, we should have a fully functional Language Model!</p>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./docs/03_transformer_encoder"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="encoder.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Combining all together: the Transformer Encoder</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="sentiment_analysis.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Fine-Tuning for Sentiment Classification</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Giuseppe Attanasio, Moreno La Quatra<br/>
+  
+      &copy; Copyright 2023.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

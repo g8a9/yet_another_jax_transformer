@@ -1,0 +1,715 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Combining all together: the Transformer Encoder &#8212; Yet Another (JAX) Transformer</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="🚀 Training your First Language Model" href="language_modeling.html" />
+    <link rel="prev" title="3️⃣ Transformer Encoder and Word-level Language Modeling" href="intro.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-NWJV81P0BZ"></script>
+<script>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){ dataLayer.push(arguments); }
+                    gtag('js', new Date());
+                    gtag('config', 'G-NWJV81P0BZ');
+                </script>
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Yet Another (JAX) Transformer</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Yet Another (JAX) Transformer
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../01_introduction_to_the_architecture/intro.html">
+   1️⃣ Introduction to The Transformer Architecture
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../02_core_components/intro.html">
+   2️⃣ Implementing the Core Components
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/attention.html">
+     Attention Mechanism in the Transformer
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/multi_headed_attention.html">
+     The Multi-Headed Attention
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/embedding_positional.html">
+     Turning Tokens into Vectors: Embeddings and Positional Encoding
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="intro.html">
+   3️⃣ Transformer Encoder and Word-level Language Modeling
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Combining all together: the Transformer Encoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="language_modeling.html">
+     🚀 Training your First Language Model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="sentiment_analysis.html">
+     Fine-Tuning for Sentiment Classification
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/03_transformer_encoder/encoder.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../../_sources/docs/03_transformer_encoder/encoder.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#feed-forward-sublayer">
+   Feed Forward Sublayer
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#encoder-block">
+   Encoder Block
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#transformer-encoder">
+   Transformer Encoder
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Combining all together: the Transformer Encoder</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#feed-forward-sublayer">
+   Feed Forward Sublayer
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#encoder-block">
+   Encoder Block
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#transformer-encoder">
+   Transformer Encoder
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section class="tex2jax_ignore mathjax_ignore" id="combining-all-together-the-transformer-encoder">
+<h1>Combining all together: the Transformer Encoder<a class="headerlink" href="#combining-all-together-the-transformer-encoder" title="Permalink to this headline">#</a></h1>
+<p>The Transformer encoder is composed of multiple <em>encoder blocks</em>. Each of these blocks comprises two sub-layers: a <em>multi-head self-attention layer</em>, and a <em>feed-forward network</em>. There is also a residual connection around each sub-layer, followed by <em>layer normalization</em>. See the Figure above for a detailed diagram of a single encoder block.</p>
+<section id="feed-forward-sublayer">
+<h2>Feed Forward Sublayer<a class="headerlink" href="#feed-forward-sublayer" title="Permalink to this headline">#</a></h2>
+<p>This sublayer is composed of a fully-connected feed-forward network. The main idea is to learn a linear transformation of the hidden representation of the previous layer. This layer has an inner hidden layer of size <code class="docutils literal notranslate"><span class="pre">d_ff</span></code>, and an inner activation function (e.g., ReLU). The <code class="docutils literal notranslate"><span class="pre">PositionwiseFeedForward</span></code> class below implements this sub-layer. It is initialized using the parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">d_model</span></code>: size of the hidden representation of the input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">d_ff</span></code>: inner size of the hidden layer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p_dropout</span></code>: dropout probability (dropout will be applied during training).</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">PositionwiseFeedForward</span></code> class implements the <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method. It takes as input the previous layer’s hidden representation and returns the current layer’s hidden representation by applying the fully-connected network.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PositionwiseFeedForward</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to create a position-wise feed-forward network.</span>
+<span class="sd">    :param d_model: The size of the embedding vector.</span>
+<span class="sd">    :param d_ff: The size of the hidden layer.</span>
+<span class="sd">    :param p_dropout: The dropout probability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">d_ff</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p_dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_ff</span> <span class="o">=</span> <span class="n">d_ff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span> <span class="o">=</span> <span class="n">p_dropout</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_1</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_ff</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_2</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param x: The input sequence.</span>
+<span class="sd">        :param is_train: Whether the model is in training mode.</span>
+<span class="sd">        :return: The output of the position-wise feed-forward network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">is_train</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">next_rng_key</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>In the last cell, we used <code class="docutils literal notranslate"><span class="pre">hk.next_rng_key()</span></code>. You can call this haiku utility function
+<strong>only from within a haiku.Module</strong> to get a new PNRGenerator key.</p>
+</section>
+<section id="encoder-block">
+<h2>Encoder Block<a class="headerlink" href="#encoder-block" title="Permalink to this headline">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code> contains all the components of a single encoder block. It is initialized using the parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">d_model</span></code>: the size of the hidden representation of the input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_heads</span></code>: number of heads in the multi-headed attention layer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">d_ff</span></code>: the inner size of the hidden layer of the position-wise feed-forward sub-layer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p_dropout</span></code>: dropout probability (dropout will be applied during training).</p></li>
+</ul>
+<p>It applies the two sub-layers: the multi-head self-attention layer and the position-wise feed-forward sub-layer.
+The <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method is used to initialize the parameters of the encoder block, while the <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method applies the encoder block to an input.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">EncoderBlock</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to create an encoder block.</span>
+
+<span class="sd">    :param d_model: The size of the embedding vector.</span>
+<span class="sd">    :param num_heads: The number of attention heads.</span>
+<span class="sd">    :param d_ff: The size of the hidden layer.</span>
+<span class="sd">    :param p_dropout: The dropout probability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">d_ff</span><span class="p">,</span> <span class="n">p_dropout</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_ff</span> <span class="o">=</span> <span class="n">d_ff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span> <span class="o">=</span> <span class="n">p_dropout</span>
+
+        <span class="c1"># self-attention sub-layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">self_attn</span> <span class="o">=</span> <span class="n">MultiheadAttention</span><span class="p">(</span>
+            <span class="n">d_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span> <span class="n">num_heads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span>
+        <span class="p">)</span>
+        <span class="c1"># positionwise feedforward sub-layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff</span> <span class="o">=</span> <span class="n">PositionwiseFeedForward</span><span class="p">(</span>
+            <span class="n">d_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span> <span class="n">d_ff</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_ff</span><span class="p">,</span> <span class="n">p_dropout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span>
+            <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">param_axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span>
+            <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">param_axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        It applies the encoder block to the input sequence.</span>
+
+<span class="sd">        :param x: The input sequence.</span>
+<span class="sd">        :param mask: The mask to be applied to the self-attention layer.</span>
+<span class="sd">        :param is_train: Whether the model is in training mode.</span>
+<span class="sd">        :return: The output of the encoder block, which is the updated input sequence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span> <span class="k">if</span> <span class="n">is_train</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="c1"># attention sub-layer</span>
+        <span class="n">sub_x</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">self_attn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_train</span><span class="p">:</span>
+            <span class="n">sub_x</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">next_rng_key</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span><span class="p">,</span> <span class="n">sub_x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">sub_x</span><span class="p">)</span>  <span class="c1"># residual conn</span>
+
+        <span class="c1"># feedforward sub-layer</span>
+        <span class="n">sub_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_train</span><span class="p">:</span>
+            <span class="n">sub_x</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">next_rng_key</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span><span class="p">,</span> <span class="n">sub_x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">sub_x</span><span class="p">)</span>  <span class="c1"># sub_x</span>
+
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>Let’s do our usual test.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Testing the Encoder block&quot;&quot;&quot;</span>
+
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">seq_len</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">d_model</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">num_heads</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">d_ff</span> <span class="o">=</span> <span class="mi">128</span>
+
+
+<span class="nd">@hk</span><span class="o">.</span><span class="n">transform</span>
+<span class="k">def</span> <span class="nf">enc_blk</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="p">):</span>
+    <span class="n">bl</span> <span class="o">=</span> <span class="n">EncoderBlock</span><span class="p">(</span><span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">d_ff</span><span class="o">=</span><span class="n">d_ff</span><span class="p">,</span> <span class="n">p_dropout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="p">)</span>
+
+
+<span class="c1">## Test EncoderBlock implementation</span>
+<span class="c1"># Example features as input</span>
+<span class="n">rng_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">rng_key</span><span class="p">,</span> <span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">d_model</span><span class="p">))</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">),</span> <span class="n">minval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxval</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Initialize parameters of encoder block with random key and inputs</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">enc_blk</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Apply encoder block with parameters on the inputs</span>
+<span class="c1"># Since dropout is stochastic, we need to pass a rng to the forward</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">enc_blk</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Out&quot;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="n">enc_blk</span><span class="p">,</span> <span class="n">params</span>
+</pre></div>
+</div>
+</section>
+<section id="transformer-encoder">
+<h2>Transformer Encoder<a class="headerlink" href="#transformer-encoder" title="Permalink to this headline">#</a></h2>
+<p>As introduced in the previous sections, the Transformer encoder is composed of multiple <em>encoder blocks</em>. The <code class="docutils literal notranslate"><span class="pre">TransformerEncoder</span></code> class below implements it by stacking <span class="math notranslate nohighlight">\(N\)</span> <code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code>s, where <span class="math notranslate nohighlight">\(N\)</span> is the number of stacked encoder blocks.</p>
+<p>This class inputs the same set of parameters as the <code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code> class and adds the parameter <code class="docutils literal notranslate"><span class="pre">num_layers</span></code> to specify the number of stacked encoder blocks.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TransformerEncoder</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to create a transformer encoder.</span>
+<span class="sd">    :param num_layers: The number of encoder blocks.</span>
+<span class="sd">    :param num_heads: The number of attention heads.</span>
+<span class="sd">    :param d_model: The size of the embedding vector.</span>
+<span class="sd">    :param d_ff: The size of the hidden layer.</span>
+<span class="sd">    :param p_dropout: The dropout probability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_layers</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">d_model</span><span class="p">,</span> <span class="n">d_ff</span><span class="p">,</span> <span class="n">p_dropout</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_layers</span> <span class="o">=</span> <span class="n">num_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_ff</span> <span class="o">=</span> <span class="n">d_ff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span> <span class="o">=</span> <span class="n">p_dropout</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">EncoderBlock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_ff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_layers</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        It applies the transformer encoder to the input sequence.</span>
+<span class="sd">        :param x: The input sequence.</span>
+<span class="sd">        :param mask: The mask to be applied to the self-attention layer.</span>
+<span class="sd">        :param is_train: Whether the model is in training mode.</span>
+<span class="sd">        :return: The final output of the encoder that contains the last encoder block output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>Let’s run our encoder block.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Testing the Transformer Encoder&quot;&quot;&quot;</span>
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">seq_len</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">d_model</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">num_heads</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">d_ff</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">num_layers</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">p_dropout</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+
+<span class="nd">@hk</span><span class="o">.</span><span class="n">transform</span>
+<span class="k">def</span> <span class="nf">transformer_encoder</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="p">):</span>
+    <span class="n">enc</span> <span class="o">=</span> <span class="n">TransformerEncoder</span><span class="p">(</span><span class="n">num_layers</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">d_model</span><span class="p">,</span> <span class="n">d_ff</span><span class="p">,</span> <span class="n">p_dropout</span><span class="p">,</span> <span class="s2">&quot;t_enc&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">enc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="p">)</span>
+
+<span class="c1">## Test TransformerEncoder implementation</span>
+<span class="c1"># Example features as input</span>
+<span class="n">rng_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">rng_key</span><span class="p">,</span> <span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">d_model</span><span class="p">))</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">),</span> <span class="n">minval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxval</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Initialize parameters of transformer with random key and inputs</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">transformer_encoder</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Apply transformer with parameters on the inputs</span>
+<span class="c1"># Since dropout is stochastic, we need to pass a rng to the forward</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">transformer_encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+    <span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="k">del</span> <span class="n">params</span><span class="p">,</span> <span class="n">transformer_encoder</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./docs/03_transformer_encoder"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="intro.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">3️⃣ Transformer Encoder and Word-level Language Modeling</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="language_modeling.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">🚀 Training your First Language Model</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Giuseppe Attanasio, Moreno La Quatra<br/>
+  
+      &copy; Copyright 2023.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

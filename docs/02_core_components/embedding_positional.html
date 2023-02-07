@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>&lt;no title&gt; &#8212; Yet Another (JAX) Transformer</title>
+    <title>Turning Tokens into Vectors: Embeddings and Positional Encoding &#8212; Yet Another (JAX) Transformer</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -50,9 +50,13 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="3️⃣ Transformer Encoder and Word-level Language Modeling" href="../03_transformer_encoder/intro.html" />
+    <link rel="prev" title="The Multi-Headed Attention" href="multi_headed_attention.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -120,22 +124,22 @@ const thebe_selector_output = ".output, .cell_output"
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="../01_introduction_to_the_architecture/intro.html">
    1️⃣ Introduction to The Transformer Architecture
   </a>
  </li>
- <li class="toctree-l1 has-children">
+ <li class="toctree-l1 current active has-children">
   <a class="reference internal" href="intro.html">
    2️⃣ Implementing the Core Components
   </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
   <label for="toctree-checkbox-1">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul>
+  <ul class="current">
    <li class="toctree-l2">
     <a class="reference internal" href="attention.html">
      Attention Mechanism in the Transformer
@@ -144,6 +148,38 @@ const thebe_selector_output = ".output, .cell_output"
    <li class="toctree-l2">
     <a class="reference internal" href="multi_headed_attention.html">
      The Multi-Headed Attention
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Turning Tokens into Vectors: Embeddings and Positional Encoding
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../03_transformer_encoder/intro.html">
+   3️⃣ Transformer Encoder and Word-level Language Modeling
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../03_transformer_encoder/encoder.html">
+     Combining all together: the Transformer Encoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../03_transformer_encoder/language_modeling.html">
+     🚀 Training your First Language Model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../03_transformer_encoder/sentiment_analysis.html">
+     Fine-Tuning for Sentiment Classification
     </a>
    </li>
   </ul>
@@ -324,7 +360,17 @@ title="Print to PDF"
         <i class="fas fa-list"></i> Contents
     </div>
     <nav id="bd-toc-nav" aria-label="Page">
-        <ul class="simple visible nav section-nav flex-column">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#embedding-layer">
+   Embedding Layer
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#positional-encoding">
+   Positional Encoding
+  </a>
+ </li>
 </ul>
 
     </nav>
@@ -334,7 +380,7 @@ title="Print to PDF"
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1><no title></h1>
+                <h1>Turning Tokens into Vectors: Embeddings and Positional Encoding</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -343,7 +389,17 @@ title="Print to PDF"
                             <h2> Contents </h2>
                         </div>
                         <nav aria-label="Page">
-                            <ul class="simple visible nav section-nav flex-column">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#embedding-layer">
+   Embedding Layer
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#positional-encoding">
+   Positional Encoding
+  </a>
+ </li>
 </ul>
 
                         </nav>
@@ -354,7 +410,107 @@ title="Print to PDF"
                 
               <div>
                 
-  
+  <section class="tex2jax_ignore mathjax_ignore" id="turning-tokens-into-vectors-embeddings-and-positional-encoding">
+<h1>Turning Tokens into Vectors: Embeddings and Positional Encoding<a class="headerlink" href="#turning-tokens-into-vectors-embeddings-and-positional-encoding" title="Permalink to this headline">#</a></h1>
+<p>The Transformer takes a sequence of words (or tokens) represented by dense vectors as input. These vectors are called <em>embeddings</em>, and their role is to map words (tokens) into a continuous vector space. The model’s input is thus a sequence of vectors obtained by <em>looking up</em> the embedding of the corresponding words (tokens) in the vocabulary.</p>
+<section id="embedding-layer">
+<h2>Embedding Layer<a class="headerlink" href="#embedding-layer" title="Permalink to this headline">#</a></h2>
+<p>As an exercise, we ask you to write an <code class="docutils literal notranslate"><span class="pre">Embeddings</span></code> class that takes as input the dimension of the embeddings’ vectors for the model (<code class="docutils literal notranslate"><span class="pre">d_model</span></code>) and the size of the vocabulary (<code class="docutils literal notranslate"><span class="pre">vocab_size</span></code>). Your class should implement the <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method that takes as input a sequence of integers, each integer corresponding to a word (token) in the vocabulary, and outputs a sequence of vectors, each vector corresponding to the embedding of the corresponding word (token).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Embeddings</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to create an embedding matrix for a given vocabulary size.</span>
+<span class="sd">    :param d_model: The size of the embedding vector.</span>
+<span class="sd">    :param vocab_size: The size of the vocabulary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span> <span class="o">=</span> <span class="n">vocab_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Embed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param x: The input sequence.</span>
+<span class="sd">        :return: The embedding matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can test it right away.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot; Test Embeddings implementation &quot;&quot;&quot;</span>
+
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">seq_len</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">d_model</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">num_heads</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">vocab_size</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">test_emb</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Embeddings</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+<span class="n">emb</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">without_apply_rng</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">test_emb</span><span class="p">))</span>
+
+<span class="c1"># example features as input</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">emb</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">),</span> <span class="n">inputs</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">emb</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Out&quot;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">del</span> <span class="n">emb</span><span class="p">,</span> <span class="n">params</span>
+</pre></div>
+</div>
+</section>
+<section id="positional-encoding">
+<h2>Positional Encoding<a class="headerlink" href="#positional-encoding" title="Permalink to this headline">#</a></h2>
+<p>The Transformer model does not use recurrent or convolutional layers in the encoder/decoder of the model (only attention mechanisms). However, this also has a drawback: since the model has no memory (no recurrent/convolutional layers), it can not take into account the <em>order</em> of the sequence elements. The position of words in the sequence is thus not encoded explicitly by the model.</p>
+<p>As a solution to this issue, the original Transformer model uses a <em>positional encoding</em> scheme to represent the position of each element in the sequence. The positional encoding is added to the token embeddings of each element. Following the original paper, positional encodings are generated with multiple sinusoidal functions with varying frequencies.</p>
+<p>Positional encoding is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\text{PE}(pos, 2i) = \sin \left( \frac{pos}{1000^{2i/d_{\text{model}}}} \right)\]</div>
+<div class="math notranslate nohighlight">
+\[\text{PE}(pos, 2i+1) = \cos \left( \frac{pos}{1000^{2i/d_{\text{model}}}} \right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(pos\)</span> is the position of the element in the sequence, <span class="math notranslate nohighlight">\(d_{\text{model}}\)</span> is the model’s embedding dimension, and <span class="math notranslate nohighlight">\(i\)</span> is the index of the position vector. Note that this is not a learned parameter; the values are pre-computed and added to the token embeddings at the beginning of the forward pass.</p>
+<p>Note that, we can optionally apply dropout to the positional encodings during training, thus providing additional regularization for the model.</p>
+<p>📚 <strong>Resources</strong></p>
+<ul class="simple">
+<li><p>Detailed explanation with visual aids: <a class="reference external" href="https://erdem.pl/2021/05/understanding-positional-encoding-in-transformers">Understanding Positional Encoding in Transformers</a></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PositionalEncoding</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to add positional encoding to the input sequence.</span>
+<span class="sd">    :param d_model: The size of the embedding vector.</span>
+<span class="sd">    :param max_len: The maximum length of the input sequence.</span>
+<span class="sd">    :param p_dropout: The dropout probability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p_dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span> <span class="o">=</span> <span class="n">max_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span> <span class="o">=</span> <span class="n">p_dropout</span>
+
+        <span class="n">pe</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">))</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">div_term</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">10000.0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">at</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">position</span> <span class="o">*</span> <span class="n">div_term</span><span class="p">))</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">at</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">position</span> <span class="o">*</span> <span class="n">div_term</span><span class="p">))</span>
+        <span class="n">pe</span> <span class="o">=</span> <span class="n">pe</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pe</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">device_put</span><span class="p">(</span><span class="n">pe</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param x: The input sequence.</span>
+<span class="sd">        :param is_train: Whether the model is in training mode.</span>
+<span class="sd">        :return: The input sequence with positional encoding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pe</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">is_train</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">hk</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">hk</span><span class="o">.</span><span class="n">next_rng_key</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_dropout</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+</section>
+</section>
+
     <script type="text/x-thebe-config">
     {
         requestKernel: true,
@@ -382,6 +538,20 @@ title="Print to PDF"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="multi_headed_attention.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">The Multi-Headed Attention</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../03_transformer_encoder/intro.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">3️⃣ Transformer Encoder and Word-level Language Modeling</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
             </footer>
         </div>

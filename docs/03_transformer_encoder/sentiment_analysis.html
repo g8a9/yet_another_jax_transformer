@@ -1,0 +1,968 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Fine-Tuning for Sentiment Classification &#8212; Yet Another (JAX) Transformer</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="🚀 Training your First Language Model" href="language_modeling.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-NWJV81P0BZ"></script>
+<script>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){ dataLayer.push(arguments); }
+                    gtag('js', new Date());
+                    gtag('config', 'G-NWJV81P0BZ');
+                </script>
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Yet Another (JAX) Transformer</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Yet Another (JAX) Transformer
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../01_introduction_to_the_architecture/intro.html">
+   1️⃣ Introduction to The Transformer Architecture
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../02_core_components/intro.html">
+   2️⃣ Implementing the Core Components
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/attention.html">
+     Attention Mechanism in the Transformer
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/multi_headed_attention.html">
+     The Multi-Headed Attention
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/embedding_positional.html">
+     Turning Tokens into Vectors: Embeddings and Positional Encoding
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="intro.html">
+   3️⃣ Transformer Encoder and Word-level Language Modeling
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="encoder.html">
+     Combining all together: the Transformer Encoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="language_modeling.html">
+     🚀 Training your First Language Model
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Fine-Tuning for Sentiment Classification
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/03_transformer_encoder/sentiment_analysis.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../../_sources/docs/03_transformer_encoder/sentiment_analysis.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#generating-a-baseline-model-with-tf-idf-and-logistic-regression">
+   🧱 Generating a baseline model with TF-IDF and Logistic Regression
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#preprocessing-the-sst-2-dataset">
+   Preprocessing the SST-2 dataset
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sentiment-classifier-as-a-haiku-transform">
+   Sentiment Classifier as a Haiku Transform
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-loop">
+   Training loop
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#evaluate-the-sentiment-classification-model">
+   Evaluate the sentiment classification model
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#randomly-initialized-vs-pre-trained-model">
+   Randomly initialized 👶 vs. pre-trained 🏋🏼 model
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
+   Evaluate the sentiment classification model
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Fine-Tuning for Sentiment Classification</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#generating-a-baseline-model-with-tf-idf-and-logistic-regression">
+   🧱 Generating a baseline model with TF-IDF and Logistic Regression
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#preprocessing-the-sst-2-dataset">
+   Preprocessing the SST-2 dataset
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#sentiment-classifier-as-a-haiku-transform">
+   Sentiment Classifier as a Haiku Transform
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-loop">
+   Training loop
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#evaluate-the-sentiment-classification-model">
+   Evaluate the sentiment classification model
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#randomly-initialized-vs-pre-trained-model">
+   Randomly initialized 👶 vs. pre-trained 🏋🏼 model
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
+   Evaluate the sentiment classification model
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section class="tex2jax_ignore mathjax_ignore" id="fine-tuning-for-sentiment-classification">
+<h1>Fine-Tuning for Sentiment Classification<a class="headerlink" href="#fine-tuning-for-sentiment-classification" title="Permalink to this headline">#</a></h1>
+<p>Let’s focus on a different task for our Transformer Encoder: <strong>Sentiment Analysis</strong>. This task requires determining if the sentiment of a given piece of text is positive or negative.</p>
+<p>Remember, the pre-training implemented before is not specific to any downstream task: we were training our Transformer on a broad set of input data and learning representations that can be useful when <em>adapted</em> to different tasks. Indeed, we will now build a classifier based on our pre-trained Transformer to perform sentiment analysis.</p>
+<p>In practice, we will train a language model with a sentiment classification <em>head</em>: instead of producing a probability distribution across all the words in our vocabulary, we will produce a class probability over a set of labels.</p>
+<p>We will use the Stanford Sentiment Treebank V2 dataset (SST-2). The dataset contains 11,855 sentences extracted from movie reviews. The sentences have been labeled with positive (1) or negative (0) sentiments.</p>
+<p>📚 <strong>Resources</strong></p>
+<ul class="simple">
+<li><p>SST-2 paper: <a class="reference external" href="https://aclanthology.org/D13-1170/">Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank</a></p></li>
+<li><p>SST-2 fields description: <a class="reference external" href="https://huggingface.co/datasets/sst2">SST-2 on datasets</a></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">raw_datasets</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;glue&quot;</span><span class="p">,</span> <span class="s2">&quot;sst2&quot;</span><span class="p">)</span>
+<span class="n">raw_datasets</span>
+</pre></div>
+</div>
+<section id="generating-a-baseline-model-with-tf-idf-and-logistic-regression">
+<h2>🧱 Generating a baseline model with TF-IDF and Logistic Regression<a class="headerlink" href="#generating-a-baseline-model-with-tf-idf-and-logistic-regression" title="Permalink to this headline">#</a></h2>
+<p>We will first build a baseline model to compare with the Transformer model. For this, we will use a TF-IDF representation of the sentences plus a Logistic Regression classifier. The baseline model will be trained using the training set of the SST-2 dataset and evaluated on the evaluation set (unfortunately, the labels of the SST-2 test set dataset are not publicly available).</p>
+<p>Run the cell below to train the baseline model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># TF-IDF baseline</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">TfidfVectorizer</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">classification_report</span>
+
+<span class="n">MAX_FEATURES</span> <span class="o">=</span> <span class="mi">10_000</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="s2">&quot;sentence&quot;</span><span class="p">],</span> <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+<span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="s2">&quot;sentence&quot;</span><span class="p">],</span>
+    <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">tfidf</span> <span class="o">=</span> <span class="n">TfidfVectorizer</span><span class="p">(</span><span class="n">max_features</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">)</span> <span class="c1"># instantiate the vectorizer</span>
+<span class="n">tfidf</span> <span class="o">=</span> <span class="n">tfidf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span> <span class="o">+</span> <span class="n">X_test</span><span class="p">)</span> <span class="c1"># fit on all data</span>
+
+<span class="n">X_train</span> <span class="o">=</span> <span class="n">tfidf</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span> <span class="c1"># transform the training data</span>
+<span class="n">X_test</span> <span class="o">=</span> <span class="n">tfidf</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span> <span class="c1"># transform the test data</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span> <span class="c1"># train the classifier</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span> <span class="c1"># run the classifier on the test data</span>
+
+<span class="n">clf_report</span> <span class="o">=</span> <span class="n">classification_report</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Accuracy: &quot;</span><span class="p">,</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Classification Report&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;======================================================&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">clf_report</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="preprocessing-the-sst-2-dataset">
+<h2>Preprocessing the SST-2 dataset<a class="headerlink" href="#preprocessing-the-sst-2-dataset" title="Permalink to this headline">#</a></h2>
+<p>After downloading the dataset, we can process the sentences with our tokenizer. Similarly to the pre-training step, we preprocess all sentences offline and avoid doing it at each training iteration.</p>
+<p>Once data are processed, we can create the data loaders that will feed our training loop.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizers</span><span class="o">.</span><span class="n">Tokenizer</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;en_tokenizer.json&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">enable_truncation</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">enable_padding</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="n">MAX_SEQ_LEN</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode_batch</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="s2">&quot;sentence&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">ids</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span>
+        <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">attention_mask</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span>
+        <span class="s2">&quot;special_tokens_mask&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">special_tokens_mask</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span>
+        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">examples</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+
+<span class="n">proc_datasets</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+    <span class="n">preprocess</span><span class="p">,</span> <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">remove_columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;sentence&quot;</span><span class="p">,</span> <span class="s2">&quot;idx&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">collate_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collate function to generate the input for the model and their corresponding labels.</span>
+<span class="sd">    In this case, the labels corresponds to the expected class of each input sequence.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">item</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]),</span>
+        <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]),</span> <span class="mi">1</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">item</span>
+
+
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span>
+<span class="p">)</span>
+<span class="n">valid_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span>
+<span class="p">)</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sentiment-classifier-as-a-haiku-transform">
+<h2>Sentiment Classifier as a Haiku Transform<a class="headerlink" href="#sentiment-classifier-as-a-haiku-transform" title="Permalink to this headline">#</a></h2>
+<p>Similarly to the model trained using MLM, we can write our sentiment classifier as a Haiku Transform.</p>
+<p>Our function will contain all the components necessary to perform the classification:</p>
+<ul class="simple">
+<li><p>a pre-trained Transformer Encoder as the base model;</p></li>
+<li><p>a Linear layer on top of it. The linear layer maps the Transformer’s output representations corresponding to the <code class="docutils literal notranslate"><span class="pre">[CLS]</span></code> token (the first token of the sequence) to two values, the logits of positive and negative sentiment.</p></li>
+</ul>
+<p>We compute Cross Entropy between the prediction and the ground truth labels. Unlike the MLM case, our labels are 0 or 1, so we can use them directly as targets in supervised learning settings.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@hk</span><span class="o">.</span><span class="n">transform</span>
+<span class="k">def</span> <span class="nf">sentiment_classifier</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The sentiment classifier model implemented using Haiku. Each input sequence is</span>
+<span class="sd">    passed through a transformer encoder and the output is passed through a linear</span>
+<span class="sd">    layer to obtain the logits.</span>
+
+<span class="sd">    :param input_ids: The input sequences.</span>
+<span class="sd">    :param mask: The attention mask.</span>
+<span class="sd">    :param is_train: Whether the model is in training mode or not.</span>
+<span class="sd">    :return: The logits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pe</span> <span class="o">=</span> <span class="n">PositionalEncoding</span><span class="p">(</span><span class="n">D_MODEL</span><span class="p">,</span> <span class="n">MAX_SEQ_LEN</span><span class="p">,</span> <span class="n">P_DROPOUT</span><span class="p">)</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">Embeddings</span><span class="p">(</span><span class="n">D_MODEL</span><span class="p">,</span> <span class="n">VOCAB_SIZE</span><span class="p">)</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">TransformerEncoder</span><span class="p">(</span><span class="n">NUM_LAYERS</span><span class="p">,</span> <span class="n">NUM_HEADS</span><span class="p">,</span> <span class="n">D_MODEL</span><span class="p">,</span> <span class="n">D_FF</span><span class="p">,</span> <span class="n">P_DROPOUT</span><span class="p">)</span>
+
+    <span class="n">input_embs</span> <span class="o">=</span> <span class="n">embeddings</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_embs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">input_embs</span> <span class="o">=</span> <span class="n">input_embs</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">input_embs</span> <span class="o">=</span> <span class="n">pe</span><span class="p">(</span><span class="n">input_embs</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>  <span class="c1"># (B,S,d_model)</span>
+    <span class="n">output_embs</span> <span class="o">=</span> <span class="n">encoder</span><span class="p">(</span><span class="n">input_embs</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>
+
+    <span class="c1"># final decoder layer</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">D_MODEL</span><span class="p">)(</span><span class="n">output_embs</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">param_axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span><span class="p">)(</span>
+        <span class="n">out</span>
+    <span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># we use the [CLS] token embedding to represent the sequence and pass it through a linear layer</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">2</span><span class="p">)(</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># logits</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The loss function for the model. It takes the model parameters, the input batch</span>
+<span class="sd">    and the random number generator as input and returns the loss.</span>
+
+<span class="sd">    :param params: The model parameters.</span>
+<span class="sd">    :param batch: The input batch.</span>
+<span class="sd">    :param rng: The random number generator.</span>
+<span class="sd">    :return: The loss.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">sentiment_classifier</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+        <span class="n">input_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">],</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">deterministic_forward</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function is used to forward the model in a deterministic way. </span>
+<span class="sd">    It uses without_apply_rng to disable the use of the random number generator.</span>
+<span class="sd">    It takes the model parameters and the input batch as input and returns the logits.</span>
+
+<span class="sd">    :param params: The model parameters.</span>
+<span class="sd">    :param batch: The input batch.</span>
+<span class="sd">    :return: The logits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">hk</span><span class="o">.</span><span class="n">without_apply_rng</span><span class="p">(</span><span class="n">sentiment_classifier</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">input_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">],</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Evaluation step.&quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">deterministic_forward</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+    <span class="n">acc</span> <span class="o">=</span> <span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">acc</span>
+</pre></div>
+</div>
+</section>
+<section id="training-loop">
+<h2>Training loop<a class="headerlink" href="#training-loop" title="Permalink to this headline">#</a></h2>
+<p>The training loop is similar to the MLM case. However, we do not need to mask the input to the Transformer since we are not training for a language modeling task.</p>
+<p>Given the supervised settings, we can evaluate the model against the validation set during training. We will monitor the validation accuracy, i.e., the percentage of correctly classified samples. The training loop tracks both the loss and the validation accuracy so that we can observe their dynamics during training.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialise network and optimiser; note we draw an input to get shapes.</span>
+<span class="n">sample</span> <span class="o">=</span> <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+    <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">init_params</span> <span class="o">=</span> <span class="n">sentiment_classifier</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">clip_by_global_norm</span><span class="p">(</span><span class="n">GRAD_CLIP_VALUE</span><span class="p">),</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">5e-5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">init_opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+
+<span class="c1"># initialize the training state class</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">TrainingState</span><span class="p">(</span><span class="n">init_params</span><span class="p">,</span> <span class="n">init_opt_state</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, we are ready to run the training.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Training &amp; evaluation loop.</span>
+
+<span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">EVAL_STEPS</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">LOG_STEPS</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">writer</span> <span class="o">=</span> <span class="n">SummaryWriter</span><span class="p">()</span>
+<span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Train step&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">EPOCHS</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">loop_metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;eval_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+<span class="n">best_eval_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+<span class="n">best_eval_acc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
+
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+        <span class="c1"># Do SGD on a batch of training examples.</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">rng_key</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span>
+        <span class="n">loop_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">EVAL_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="n">valid_loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Eval&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eval_step</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">))</span>
+
+            <span class="n">eval_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">eval_acc</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_loss</span>
+            <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_acc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_acc</span>
+
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/valid&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Acc/valid&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_acc&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">eval_acc</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">best_eval_acc</span><span class="p">:</span>
+                <span class="n">best_eval_loss</span> <span class="o">=</span> <span class="n">eval_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">best_eval_acc</span> <span class="o">=</span> <span class="n">eval_acc</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">best_eval_ckpt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sentiment_class_state_</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="n">best_eval_acc</span><span class="p">,</span> <span class="n">best_eval_ckpt</span><span class="p">)</span>
+                <span class="c1"># Save the params training state (and params) to disk</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">best_eval_ckpt</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">LOG_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/train&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span><span class="n">loop_metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="evaluate-the-sentiment-classification-model">
+<h2>Evaluate the sentiment classification model<a class="headerlink" href="#evaluate-the-sentiment-classification-model" title="Permalink to this headline">#</a></h2>
+<p>After training, we can classify the entire evaluation set using the best checkpoint available and compute the classification report.</p>
+<p>Set the variable <code class="docutils literal notranslate"><span class="pre">model_checkpoint_path</span></code> to choose which checkpoint to evaluate.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_checkpoint_path</span> <span class="o">=</span> <span class="s2">&quot;...&quot;</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_checkpoint_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">classify</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Classify a batch of text.&quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">deterministic_forward</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span> <span class="c1"># (B,2)</span>
+    <span class="k">return</span> <span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">y_true</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Eval&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">classify</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+    <span class="n">y_pred</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">y_true</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+
+<span class="n">clf_report</span> <span class="o">=</span> <span class="n">classification_report</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Accuracy: &quot;</span><span class="p">,</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Classification Report&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;======================================================&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">clf_report</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="randomly-initialized-vs-pre-trained-model">
+<h2>Randomly initialized 👶 vs. pre-trained 🏋🏼 model<a class="headerlink" href="#randomly-initialized-vs-pre-trained-model" title="Permalink to this headline">#</a></h2>
+<p>The Transformer encoder trained above is randomly initialized and is trained from scratch. However, the great success of Transformers in many NLP tasks is due to their excellent performance when fine-tuned starting from a pre-trained model. Using a pre-trained model allows us to leverage the large amount of training data used to train the model from scratch for the task we are interested in.</p>
+<p>As a result, we can fine-tune the Transformer encoder starting from the pre-trained weights obtained with the MLM objective. The following cell loads the weights of the pre-trained Transformer in the new model we are training for sentiment classification.</p>
+<p>Although the model architecture is similar, the sentiment classification model has an additional Linear layer on top of the Transformer, which is randomly initialized. Therefore, we do not (and can not) load the weights of this additional layer into the model.</p>
+<p>If you compare the performance of the two models, <em>which one can reach the highest accuracy?</em></p>
+<p>You can use both:</p>
+<ul class="simple">
+<li><p>a model that we have already pre-trained for you on large English corpora or,</p></li>
+<li><p>the model pre-trained in the previous section</p></li>
+</ul>
+<p><strong>Use our pre-trained model:</strong> Since everything in Haiku is stateless, you can download the <code class="docutils literal notranslate"><span class="pre">TrainingState</span></code> (which contains the model parameters) and use it in your subsequent <code class="docutils literal notranslate"><span class="pre">apply</span></code> call.
+You should also load the pre-trained tokenized paired with the model in this case.</p>
+<p>You will need to take care of the hyper-parameters to match the one we used to train it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_LAYERS</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">NUM_HEADS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">D_MODEL</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">D_FF</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">P_DROPOUT</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MAX_SEQ_LEN</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">VOCAB_SIZE</span> <span class="o">=</span> <span class="mi">25000</span>
+</pre></div>
+</div>
+<p>Run the cell below to download the files.</p>
+<p><strong>Your own pre-training</strong>: Similarly, you can load the best checkpoint obtained above by loading the checkpoint saved before.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/v1_mlm_train_state_362000.pkl
+wget https://huggingface.co/morenolq/m2l_2022_nlp/raw/main/v1_en_tokenizer_1M.json
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># model parameters</span>
+<span class="n">NUM_LAYERS</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">NUM_HEADS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">D_MODEL</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">D_FF</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">P_DROPOUT</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MAX_SEQ_LEN</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">VOCAB_SIZE</span> <span class="o">=</span> <span class="mi">25_000</span>
+
+<span class="c1"># Initialise network and optimiser; note we draw an input to get shapes.</span>
+<span class="n">sample</span> <span class="o">=</span> <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+    <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">init_params</span> <span class="o">=</span> <span class="n">sentiment_classifier</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">clip_by_global_norm</span><span class="p">(</span><span class="n">GRAD_CLIP_VALUE</span><span class="p">),</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">5e-5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">init_opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+
+<span class="c1"># initialize the training state class</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">TrainingState</span><span class="p">(</span><span class="n">init_params</span><span class="p">,</span> <span class="n">init_opt_state</span><span class="p">)</span>
+
+<span class="c1"># load the pre-trained model</span>
+<span class="n">pretrained_model_path</span> <span class="o">=</span> <span class="s2">&quot;v1_mlm_train_state_362000.pkl&quot;</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pretrained_model_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+    <span class="n">pretrained_state</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+<span class="c1"># load the weights from the pre-trained model to the new model</span>
+<span class="n">encoder_weights</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pretrained_state</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">params</span>
+<span class="p">}</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoder_weights</span><span class="p">),</span> <span class="s2">&quot;pretrained weights&quot;</span><span class="p">)</span>
+<span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">encoder_weights</span><span class="p">)</span>
+
+<span class="c1"># load pre-trained tokenizer</span>
+<span class="n">pretrained_tokenizer_path</span> <span class="o">=</span> <span class="s2">&quot;v1_en_tokenizer_1M.json&quot;</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizers</span><span class="o">.</span><span class="n">Tokenizer</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pretrained_tokenizer_path</span><span class="p">)</span>
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">enable_truncation</span><span class="p">(</span><span class="n">MAX_SEQ_LEN</span><span class="p">)</span>
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">enable_padding</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="n">MAX_SEQ_LEN</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At this point, it is possible to run the training process using the pre-trained weights as a starting point and run the final evaluation to check the model’s performance.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">EVAL_STEPS</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">LOG_STEPS</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">writer</span> <span class="o">=</span> <span class="n">SummaryWriter</span><span class="p">()</span>
+<span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Train step&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">EPOCHS</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">loop_metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;eval_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+<span class="n">best_eval_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+<span class="n">best_eval_acc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
+
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+        <span class="c1"># Do SGD on a batch of training examples.</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">rng_key</span> <span class="o">=</span> <span class="n">train_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span>
+        <span class="n">loop_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">EVAL_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="n">valid_loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Eval&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eval_step</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">))</span>
+
+            <span class="n">eval_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">eval_acc</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_loss</span>
+            <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_acc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_acc</span>
+
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/valid&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Acc/valid&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_acc&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">eval_acc</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">best_eval_acc</span><span class="p">:</span>
+                <span class="n">best_eval_loss</span> <span class="o">=</span> <span class="n">eval_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">best_eval_acc</span> <span class="o">=</span> <span class="n">eval_acc</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">best_eval_ckpt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ft_sentiment_class_state_</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="n">best_eval_acc</span><span class="p">,</span> <span class="n">best_eval_ckpt</span><span class="p">)</span>
+                <span class="c1"># Save the params training state (and params) to disk</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">best_eval_ckpt</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">LOG_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/train&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span><span class="n">loop_metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h2>Evaluate the sentiment classification model<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h2>
+<p>At the end of the training process, we can run the full evaluation of the best checkpoint available and print the classification report.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_checkpoint_path</span> <span class="o">=</span> <span class="s2">&quot;...&quot;</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_checkpoint_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">y_true</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Eval&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">classify</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+    <span class="n">y_pred</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">y_true</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+
+<span class="n">clf_report</span> <span class="o">=</span> <span class="n">classification_report</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Accuracy: &quot;</span><span class="p">,</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Classification Report - Pre-Training + Fine-Tuning&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;======================================================&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">clf_report</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./docs/03_transformer_encoder"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="language_modeling.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">🚀 Training your First Language Model</p>
+        </div>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Giuseppe Attanasio, Moreno La Quatra<br/>
+  
+      &copy; Copyright 2023.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>
