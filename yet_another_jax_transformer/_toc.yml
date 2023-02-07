@@ -7,5 +7,11 @@ chapters:
 - file: docs/01_introduction_to_the_architecture/intro
 - file: docs/02_core_components/intro
   sections:
-  - file:  docs/02_core_components/attention
-  - file:  docs/02_core_components/multi_headed_attention
+  - file: docs/02_core_components/attention
+  - file: docs/02_core_components/multi_headed_attention
+  - file: docs/02_core_components/embedding_positional
+- file: docs/03_transformer_encoder/intro
+  sections:
+  - file: docs/03_transformer_encoder/encoder
+  - file: docs/03_transformer_encoder/language_modeling
+  - file: docs/03_transformer_encoder/sentiment_analysis
