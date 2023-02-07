@@ -487,17 +487,15 @@ Our MT system translates from what is known as a <em>notional gender language</e
 <section id="running-the-evaluation">
 <h2>🔃 Running the evaluation<a class="headerlink" href="#running-the-evaluation" title="Permalink to this headline">#</a></h2>
 <p>Run the cell below to install the required dependencies and the WinoMT repository. If you are running the notebook locally, please note that you might require root access to install some of the packages.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>%%capture
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Dependencies required by WinoMT</span>
+apt-get install libgoogle-perftools-dev libsparsehash-dev
 
-&quot;&quot;&quot;Dependencies required by WinoMT&quot;&quot;&quot;
-!apt-get install libgoogle-perftools-dev libsparsehash-dev
+git clone https://github.com/clab/fast_align.git
+<span class="nb">cd</span> fast_align <span class="o">&amp;&amp;</span> mkdir build <span class="o">&amp;&amp;</span> <span class="nb">cd</span> build <span class="o">&amp;&amp;</span> cmake .. <span class="o">&amp;&amp;</span> make
+<span class="nb">export</span> <span class="nv">FAST_ALIGN_BASE</span><span class="o">=</span><span class="s2">&quot;./fast_align&quot;</span> <span class="o">&amp;&amp;</span> <span class="nv">FAST_ALIGN_BASE</span><span class="o">=</span><span class="s2">&quot;./fast_align&quot;</span>
 
-!git clone https://github.com/clab/fast_align.git
-!cd fast_align &amp;&amp; mkdir build &amp;&amp; cd build &amp;&amp; cmake .. &amp;&amp; make
-!export FAST_ALIGN_BASE=&quot;./fast_align&quot; &amp;&amp; FAST_ALIGN_BASE=&quot;./fast_align&quot;
-
-!git clone https://github.com/g8a9/mt_gender.git
-!cd mt_gender &amp;&amp; ./install.sh
+git clone https://github.com/g8a9/mt_gender.git
+<span class="nb">cd</span> mt_gender <span class="o">&amp;&amp;</span> ./install.sh
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;WinoMT utilities&quot;&quot;&quot;</span>

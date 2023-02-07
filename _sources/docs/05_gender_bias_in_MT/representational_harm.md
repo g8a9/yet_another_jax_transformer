@@ -28,18 +28,16 @@ Let's move on and see how our small toy model behaves.
 
 Run the cell below to install the required dependencies and the WinoMT repository. If you are running the notebook locally, please note that you might require root access to install some of the packages.
 
-```python
-%%capture
+```bash
+# Dependencies required by WinoMT
+apt-get install libgoogle-perftools-dev libsparsehash-dev
 
-"""Dependencies required by WinoMT"""
-!apt-get install libgoogle-perftools-dev libsparsehash-dev
+git clone https://github.com/clab/fast_align.git
+cd fast_align && mkdir build && cd build && cmake .. && make
+export FAST_ALIGN_BASE="./fast_align" && FAST_ALIGN_BASE="./fast_align"
 
-!git clone https://github.com/clab/fast_align.git
-!cd fast_align && mkdir build && cd build && cmake .. && make
-!export FAST_ALIGN_BASE="./fast_align" && FAST_ALIGN_BASE="./fast_align"
-
-!git clone https://github.com/g8a9/mt_gender.git
-!cd mt_gender && ./install.sh
+git clone https://github.com/g8a9/mt_gender.git
+cd mt_gender && ./install.sh
 ```
 
 ```python
