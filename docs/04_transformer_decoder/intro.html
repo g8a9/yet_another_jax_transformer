@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>2️⃣ Implementing the Core Components &#8212; Yet Another (JAX) Transformer</title>
+    <title>5️⃣ Transformer and Neural Machine Translation &#8212; Yet Another (JAX) Transformer</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -53,8 +53,8 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Attention Mechanism in the Transformer" href="attention.html" />
-    <link rel="prev" title="1️⃣ Introduction to The Transformer Architecture" href="../01_introduction_to_the_architecture/intro.html" />
+    <link rel="next" title="The Transformer Decoder" href="decoder.html" />
+    <link rel="prev" title="Fine-Tuning for Sentiment Classification" href="../03_transformer_encoder/sentiment_analysis.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -128,28 +128,28 @@ const thebe_selector_output = ".output, .cell_output"
    1️⃣ Introduction to The Transformer Architecture
   </a>
  </li>
- <li class="toctree-l1 current active has-children">
-  <a class="current reference internal" href="#">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../02_core_components/intro.html">
    2️⃣ Implementing the Core Components
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
   <label for="toctree-checkbox-1">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="attention.html">
+    <a class="reference internal" href="../02_core_components/attention.html">
      Attention Mechanism in the Transformer
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="multi_headed_attention.html">
+    <a class="reference internal" href="../02_core_components/multi_headed_attention.html">
      The Multi-Headed Attention
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="embedding_positional.html">
+    <a class="reference internal" href="../02_core_components/embedding_positional.html">
      Turning Tokens into Vectors: Embeddings and Positional Encoding
     </a>
    </li>
@@ -182,33 +182,33 @@ const thebe_selector_output = ".output, .cell_output"
    </li>
   </ul>
  </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="../04_transformer_decoder/intro.html">
+ <li class="toctree-l1 current active has-children">
+  <a class="current reference internal" href="#">
    5️⃣ Transformer and Neural Machine Translation
   </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
   <label for="toctree-checkbox-3">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="../04_transformer_decoder/decoder.html">
+    <a class="reference internal" href="decoder.html">
      The Transformer Decoder
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="../04_transformer_decoder/preparation_MT.html">
+    <a class="reference internal" href="preparation_MT.html">
      Preparation for the MT task
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="../04_transformer_decoder/training_MT.html">
+    <a class="reference internal" href="training_MT.html">
      Training a Neural Machine Translation Model 🇬🇧 -&gt; 🇮🇹
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="../04_transformer_decoder/quantitative_evaluation.html">
+    <a class="reference internal" href="quantitative_evaluation.html">
      Quantitative Evaluation with BLEU
     </a>
    </li>
@@ -304,7 +304,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/02_core_components/intro.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/04_transformer_decoder/intro.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -332,7 +332,7 @@ title="Open an issue"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="../../_sources/docs/02_core_components/intro.md"
+        <a href="../../_sources/docs/04_transformer_decoder/intro.md"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -369,23 +369,60 @@ title="Print to PDF"
     </ul>
   </div>
 </div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
 
     </div>
 </div>
 
 <!-- Table of contents -->
 <div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mapping-sources-and-targets">
+   Mapping Sources ➡️ and Targets ⬅️
+  </a>
+ </li>
+</ul>
+
+    </nav>
 </div>
     </div>
     <div class="article row">
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>2️⃣ Implementing the Core Components</h1>
+                <h1>5️⃣ Transformer and Neural Machine Translation</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mapping-sources-and-targets">
+   Mapping Sources ➡️ and Targets ⬅️
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -393,9 +430,32 @@ title="Print to PDF"
                 
               <div>
                 
-  <section class="tex2jax_ignore mathjax_ignore" id="implementing-the-core-components">
-<h1>2️⃣ Implementing the Core Components<a class="headerlink" href="#implementing-the-core-components" title="Permalink to this headline">#</a></h1>
-<p>In this section, we will implement the core modules that both the encoder and the decoder will use, i.e., Scaled Dot Product Attention, Multi-Headed Attention, Positional Encoding, and Feed-Forward Networks.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="transformer-and-neural-machine-translation">
+<h1>5️⃣ Transformer and Neural Machine Translation<a class="headerlink" href="#transformer-and-neural-machine-translation" title="Permalink to this headline">#</a></h1>
+<p>Until now, we focused entirely on the Encoder part of the architecture. As we have seen, one can build a Language Model that can work as a generic “encoder” of tokens and then fine-tune it.</p>
+<p>However, as we examined in Section 1 of the tutorial, the Transformer architecture also has a <strong>Decoder</strong> part, i.e., a neural network that can “decode” some sequence into something else.*</p>
+<p>Indeed, the original application of the Transformer was Neural Machine Translation (NMT, or MT). In this task, the network is presented with samples composed of a <em>source sentence</em> in a given language, say English, and a <em>target sentence</em> in a different language, say Italian, as the result of the translation.</p>
+<p>In this part of the tutorial, we will conclude the Transformer implementation by sketching the Transformer Decoder. Then, we will test the complete architecture in the task of MT. Specifically, we will train an MT system from scratch on the TatoEBA dataset.</p>
+<p>Before we start coding, let’s review how the Transformer learns to map a source sequence into a target sequence.</p>
+<p>* <em>There exist some language models trained to predict the next word in a sentence. These models are “decoder-only” as their only purpose is to “decode” a given context (the words already seen) into the subsequent token. You might have heard about some of them: GPT-*, OPT, or BLOOM.</em></p>
+<section id="mapping-sources-and-targets">
+<h2>Mapping Sources ➡️ and Targets ⬅️<a class="headerlink" href="#mapping-sources-and-targets" title="Permalink to this headline">#</a></h2>
+<p>But how does the Transformer work? How do we train it in a sequence-to-sequence setup, and how do we use it to transform a source into a target sequence? Let’s cover these questions before turning to the actual code.</p>
+<p><strong>How does it work?</strong></p>
+<p>The Transformer processes a source sequence producing a <em>contextualized, dense vector representation</em> of each token of the sequence. This step is what you implemented in Sections 2️⃣ and 3️⃣ with the Encoder.</p>
+<p>At the same time, the model processes the target sequence with the Decoder. However, the Decoder does not work in isolation: we inject the source sequence and let the model learn a mapping between source and target. This operation is what you will implement in the remainder of this section.</p>
+<p><strong>How do I train it?</strong></p>
+<p>We provide the model with both the source and target sequences at training time. The Encoder contextualizes the source tokens, and the Decoder <strong>distills</strong> this information in the target sequence representations, using a <strong>cross-attention layer</strong>. Additionally, each token in the Decoder is processed in an <strong>autoregressive/masked</strong> fashion, meaning that it expresses an attention weight only to previous/past tokens.</p>
+<p>☝️ these <em>source distillation</em> and <em>autoregressive/masked attention</em> features are the two crucial differences between the Encoder and Decoder.</p>
+<p><strong>How do I use it to go from source to target?</strong></p>
+<p>Once it is trained, you have to “decode” the source sentence. You typically do that by:</p>
+<ol class="simple">
+<li><p>encoding the source, as usual;</p></li>
+<li><p>produce one token at a time. Each token will run self-attention on the past decoded tokens and cross-attention on the source sentence.</p></li>
+</ol>
+<p>See the animation below for a graphical representation of decoding.</p>
+<p><img alt="mt_example" src="https://github.com/g8a9/graphics/blob/main/mt_example.gif?raw=true" /></p>
+</section>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -413,7 +473,7 @@ title="Print to PDF"
         },
         kernelOptions: {
             kernelName: "python3",
-            path: "./docs/02_core_components"
+            path: "./docs/04_transformer_decoder"
         },
         predefinedOutput: true
     }
@@ -427,17 +487,17 @@ title="Print to PDF"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="../01_introduction_to_the_architecture/intro.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="../03_transformer_encoder/sentiment_analysis.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">1️⃣ Introduction to The Transformer Architecture</p>
+            <p class="prev-next-title">Fine-Tuning for Sentiment Classification</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="attention.html" title="next page">
+    <a class='right-next' id="next-link" href="decoder.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Attention Mechanism in the Transformer</p>
+        <p class="prev-next-title">The Transformer Decoder</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

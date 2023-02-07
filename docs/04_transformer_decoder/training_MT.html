@@ -1,0 +1,898 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Training a Neural Machine Translation Model 🇬🇧 -&gt; 🇮🇹 &#8212; Yet Another (JAX) Transformer</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Quantitative Evaluation with BLEU" href="quantitative_evaluation.html" />
+    <link rel="prev" title="Preparation for the MT task" href="preparation_MT.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-NWJV81P0BZ"></script>
+<script>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){ dataLayer.push(arguments); }
+                    gtag('js', new Date());
+                    gtag('config', 'G-NWJV81P0BZ');
+                </script>
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Yet Another (JAX) Transformer</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Yet Another (JAX) Transformer
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../01_introduction_to_the_architecture/intro.html">
+   1️⃣ Introduction to The Transformer Architecture
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../02_core_components/intro.html">
+   2️⃣ Implementing the Core Components
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/attention.html">
+     Attention Mechanism in the Transformer
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/multi_headed_attention.html">
+     The Multi-Headed Attention
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../02_core_components/embedding_positional.html">
+     Turning Tokens into Vectors: Embeddings and Positional Encoding
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../03_transformer_encoder/intro.html">
+   3️⃣ Transformer Encoder and Word-level Language Modeling
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../03_transformer_encoder/encoder.html">
+     Combining all together: the Transformer Encoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../03_transformer_encoder/language_modeling.html">
+     🚀 Training your First Language Model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../03_transformer_encoder/sentiment_analysis.html">
+     Fine-Tuning for Sentiment Classification
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="intro.html">
+   5️⃣ Transformer and Neural Machine Translation
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="decoder.html">
+     The Transformer Decoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="preparation_MT.html">
+     Preparation for the MT task
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Training a Neural Machine Translation Model 🇬🇧 -&gt; 🇮🇹
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="quantitative_evaluation.html">
+     Quantitative Evaluation with BLEU
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/04_transformer_decoder/training_MT.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../../_sources/docs/04_transformer_decoder/training_MT.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#defining-the-model-transformation-exercise">
+   Defining the model transformation [EXERCISE 📝]
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-the-training-loop">
+   Setup the training loop
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-and-evaluation-loop">
+   Training and evaluation loop
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#implement-greedy-decoding">
+   Implement Greedy Decoding
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Training a Neural Machine Translation Model 🇬🇧 -> 🇮🇹</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#defining-the-model-transformation-exercise">
+   Defining the model transformation [EXERCISE 📝]
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-the-training-loop">
+   Setup the training loop
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training-and-evaluation-loop">
+   Training and evaluation loop
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#implement-greedy-decoding">
+   Implement Greedy Decoding
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section class="tex2jax_ignore mathjax_ignore" id="training-a-neural-machine-translation-model">
+<h1>Training a Neural Machine Translation Model 🇬🇧 -&gt; 🇮🇹<a class="headerlink" href="#training-a-neural-machine-translation-model" title="Permalink to this headline">#</a></h1>
+<section id="defining-the-model-transformation-exercise">
+<h2>Defining the model transformation [EXERCISE 📝]<a class="headerlink" href="#defining-the-model-transformation-exercise" title="Permalink to this headline">#</a></h2>
+<p>We can now define the Transformer model that will be used to translate from English to Italian. We also define the criterion (loss function) we can use to train the MT model. Similarly to the Encoder model, we will use the Cross-Entropy loss, but we need to compute it across all target words.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@hk</span><span class="o">.</span><span class="n">transform</span>
+<span class="k">def</span> <span class="nf">mt_model</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The machine translation model that relies on the encoder and decoder defined above.</span>
+
+<span class="sd">    :param src: source sequences</span>
+<span class="sd">    :param src_mask: source mask</span>
+<span class="sd">    :param tgt: target sequences</span>
+<span class="sd">    :param tgt_mask: target mask</span>
+<span class="sd">    :param is_train: whether the model is in training mode or not</span>
+<span class="sd">    :return: logits</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">(</span>
+        <span class="n">d_model</span><span class="o">=</span><span class="n">D_MODEL</span><span class="p">,</span>
+        <span class="n">d_ff</span><span class="o">=</span><span class="n">D_FF</span><span class="p">,</span>
+        <span class="n">src_vocab_size</span><span class="o">=</span><span class="n">VOCAB_SIZE</span><span class="p">,</span>
+        <span class="n">tgt_vocab_size</span><span class="o">=</span><span class="n">VOCAB_SIZE</span><span class="p">,</span>
+        <span class="n">num_layers</span><span class="o">=</span><span class="n">NUM_LAYERS</span><span class="p">,</span>
+        <span class="n">num_heads</span><span class="o">=</span><span class="n">NUM_HEADS</span><span class="p">,</span>
+        <span class="n">p_dropout</span><span class="o">=</span><span class="n">P_DROPOUT</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="o">=</span><span class="n">MAX_SEQ_LEN</span><span class="p">,</span>
+        <span class="n">tie_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">output_embs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span><span class="p">,</span> <span class="n">is_train</span><span class="o">=</span><span class="n">is_train</span><span class="p">)</span>
+
+    <span class="c1"># final decoder</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">VOCAB_SIZE</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;decoder_final_linear&quot;</span><span class="p">)(</span><span class="n">output_embs</span><span class="p">)</span>  <span class="c1"># logits</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+<span class="k">def</span> <span class="nf">prepare_sample</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">,</span> <span class="n">src_text</span><span class="p">,</span> <span class="n">tgt_text</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="o">=</span><span class="n">MAX_SEQ_LEN</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepare a sample for the model. </span>
+<span class="sd">    This function encode the source and target sequences to generate the sentence pair.</span>
+<span class="sd">    It also generates the attention masks for the source and target sequences.</span>
+<span class="sd">    </span>
+<span class="sd">    :param tokenizer: the tokenizer to use</span>
+<span class="sd">    :param src_text: the source text</span>
+<span class="sd">    :param tgt_text: the target text</span>
+<span class="sd">    :param max_seq_len: the maximum sequence length</span>
+<span class="sd">    :return: a tuple of (src_enc, src_mask, tgt_enc, tgt_mask) if tgt_text is not None, otherwise (src_enc, src_mask)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">src_enc</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">src_text</span><span class="p">,</span> <span class="n">add_special_tokens</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_enc</span><span class="o">.</span><span class="n">ids</span><span class="p">])</span>
+    <span class="n">src_mask</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_enc</span><span class="o">.</span><span class="n">attention_mask</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">item</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">tgt_text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tgt_enc</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">tgt_text</span><span class="p">,</span> <span class="n">add_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">tgt</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">tgt_enc</span><span class="o">.</span><span class="n">ids</span><span class="p">])</span>
+        <span class="n">tgt_mask</span> <span class="o">=</span> <span class="n">subsequent_mask</span><span class="p">(</span><span class="n">max_seq_len</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">+=</span> <span class="p">(</span><span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">item</span>
+</pre></div>
+</div>
+<p>Let’s test the model and the loss function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># testing the MT model</span>
+<span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span> <span class="o">=</span> <span class="n">prepare_sample</span><span class="p">(</span>
+    <span class="n">mt_tokenizer</span><span class="p">,</span> <span class="s2">&quot;Hello my friend&quot;</span><span class="p">,</span> <span class="s2">&quot;Ciao amico mio&quot;</span>
+<span class="p">)</span>
+
+<span class="n">rng_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">mt_model</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">mt_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">,</span>
+    <span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span>
+    <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span>
+    <span class="n">src_mask</span><span class="o">=</span><span class="n">src_mask</span><span class="p">,</span>
+    <span class="n">tgt</span><span class="o">=</span><span class="n">tgt</span><span class="p">,</span>
+    <span class="n">tgt_mask</span><span class="o">=</span><span class="n">tgt_mask</span><span class="p">,</span>
+    <span class="n">is_train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Logits shape&quot;</span><span class="p">,</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># testing loss functions</span>
+<span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader_mt</span><span class="p">:</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">mt_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">rng</span><span class="o">=</span><span class="n">rng_key</span><span class="p">,</span>
+        <span class="n">src</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span>
+        <span class="n">src_mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;src_mask&quot;</span><span class="p">],</span>
+        <span class="n">tgt</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tgt&quot;</span><span class="p">],</span>
+        <span class="n">tgt_mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tgt_mask&quot;</span><span class="p">],</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">labels</span> <span class="o">!=</span> <span class="n">PAD_ID</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">not_pad_count</span> <span class="o">=</span> <span class="p">(</span><span class="n">labels</span> <span class="o">!=</span> <span class="n">PAD_ID</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">not_pad_count</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">counter</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</section>
+<section id="setup-the-training-loop">
+<h2>Setup the training loop<a class="headerlink" href="#setup-the-training-loop" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># @param {type:&quot;number&quot;}</span>
+<span class="n">EVAL_STEPS</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># @param {type:&quot;number&quot;}</span>
+<span class="n">LOG_STEPS</span> <span class="o">=</span> <span class="mi">200</span>
+
+<span class="c1"># Initialise network and optimiser; note we draw an input to get shapes.</span>
+<span class="n">sample</span> <span class="o">=</span> <span class="n">proc_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+    <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
+    <span class="p">(</span>
+        <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;src_ids&quot;</span><span class="p">],</span>
+        <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;src_mask&quot;</span><span class="p">],</span>
+        <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;tgt_ids&quot;</span><span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="n">tgt_mask</span> <span class="o">=</span> <span class="n">subsequent_mask</span><span class="p">(</span><span class="n">MAX_SEQ_LEN</span><span class="p">)</span>
+
+<span class="n">rng_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">rng_iter</span><span class="p">)</span>
+<span class="n">init_params</span> <span class="o">=</span> <span class="n">mt_model</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng_key</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># We use learning rate scheduling / annealing</span>
+<span class="n">total_steps</span> <span class="o">=</span> <span class="n">EPOCHS</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader_mt</span><span class="p">)</span>
+<span class="n">schedule</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">warmup_cosine_decay_schedule</span><span class="p">(</span>
+    <span class="n">init_value</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+    <span class="n">peak_value</span><span class="o">=</span><span class="n">LEARNING_RATE</span><span class="p">,</span>
+    <span class="n">warmup_steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">total_steps</span><span class="p">),</span>
+    <span class="n">decay_steps</span><span class="o">=</span><span class="n">total_steps</span><span class="p">,</span>
+    <span class="n">end_value</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">clip_by_global_norm</span><span class="p">(</span><span class="n">GRAD_CLIP_VALUE</span><span class="p">),</span>
+    <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">LEARNING_RATE</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">init_opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+
+<span class="c1"># initialize the training state class</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">TrainingState</span><span class="p">(</span><span class="n">init_params</span><span class="p">,</span> <span class="n">init_opt_state</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">loss_fn_mt</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The loss function for the machine translation model.</span>
+<span class="sd">    The loss is computed as the sum of the cross entropy loss for each token in the target sequence.</span>
+<span class="sd">    </span>
+<span class="sd">    :param params: the model parameters</span>
+<span class="sd">    :param batch: the batch of data</span>
+<span class="sd">    :param rng: the random number generator</span>
+<span class="sd">    :return: the loss value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="sd">&quot;&quot;&quot;EXERCISE&quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">mt_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+        <span class="n">src</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span>
+        <span class="n">src_mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;src_mask&quot;</span><span class="p">],</span>
+        <span class="n">tgt</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tgt&quot;</span><span class="p">],</span>
+        <span class="n">tgt_mask</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tgt_mask&quot;</span><span class="p">],</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">labels</span> <span class="o">!=</span> <span class="n">PAD_ID</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">not_pad_count</span> <span class="o">=</span> <span class="p">(</span><span class="n">labels</span> <span class="o">!=</span> <span class="n">PAD_ID</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">not_pad_count</span>
+
+
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">train_step_mt</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingState</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The training step for the machine translation model.</span>
+
+<span class="sd">    :param state: the state of the training</span>
+<span class="sd">    :param batch: the batch of data</span>
+<span class="sd">    :param rng_key: the random number generator</span>
+<span class="sd">    :return: the new training state, the metrics (training loss) and the random number generator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng_key</span><span class="p">,</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rng_key</span><span class="p">)</span>
+
+    <span class="n">loss_and_grad_fn</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">loss_fn_mt</span><span class="p">)</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">grads</span> <span class="o">=</span> <span class="n">loss_and_grad_fn</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span>
+
+    <span class="n">updates</span><span class="p">,</span> <span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grads</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">opt_state</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">apply_updates</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+
+    <span class="n">new_state</span> <span class="o">=</span> <span class="n">TrainingState</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">opt_state</span><span class="p">)</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">new_state</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">rng_key</span>
+
+
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">deterministic_forward</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">tgt_mask</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The deterministic forward pass for the machine translation model.</span>
+<span class="sd">    It leverages without_apply_rng to avoid the need for a random number generator.</span>
+<span class="sd">    </span>
+<span class="sd">    :param params: the model parameters</span>
+<span class="sd">    :param src: the source sequences</span>
+<span class="sd">    :param src_mask: the source mask</span>
+<span class="sd">    :param tgt: the target sequences</span>
+<span class="sd">    :param tgt_mask: the target mask</span>
+<span class="sd">    :return: the logits</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">hk</span><span class="o">.</span><span class="n">without_apply_rng</span><span class="p">(</span><span class="n">mt_model</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">is_train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span>
+        <span class="n">src_mask</span><span class="o">=</span><span class="n">src_mask</span><span class="p">,</span>
+        <span class="n">tgt</span><span class="o">=</span><span class="n">tgt</span><span class="p">,</span>
+        <span class="n">tgt_mask</span><span class="o">=</span><span class="n">tgt_mask</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">eval_step_mt</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The evaluation step for the machine translation model.</span>
+<span class="sd">    :param params: the model parameters</span>
+<span class="sd">    :param batch: the batch of data</span>
+<span class="sd">    :return: the evaluation loss</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">deterministic_forward</span><span class="p">(</span>
+        <span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;src_mask&quot;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tgt&quot;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tgt_mask&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_integer_labels</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">labels</span> <span class="o">!=</span> <span class="n">PAD_ID</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">not_pad_count</span> <span class="o">=</span> <span class="p">(</span><span class="n">labels</span> <span class="o">!=</span> <span class="n">PAD_ID</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">not_pad_count</span>
+</pre></div>
+</div>
+</section>
+<section id="training-and-evaluation-loop">
+<h2>Training and evaluation loop<a class="headerlink" href="#training-and-evaluation-loop" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">writer</span> <span class="o">=</span> <span class="n">SummaryWriter</span><span class="p">()</span>
+<span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Train step&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">EPOCHS</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader_mt</span><span class="p">))</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">loop_metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;eval_loss&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+<span class="n">best_eval_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
+
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader_mt</span><span class="p">:</span>
+
+        <span class="n">state</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">rng_key</span> <span class="o">=</span> <span class="n">train_step_mt</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">rng_key</span><span class="p">)</span>
+        <span class="n">loop_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">EVAL_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ebar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Eval step&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_loader_mt</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">losses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">valid_loader_mt</span><span class="p">:</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">eval_step_mt</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+                <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+                <span class="n">ebar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ebar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="n">eval_loss</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_loss</span>
+
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/valid&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;eval_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">eval_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">best_eval_loss</span><span class="p">:</span>
+                <span class="n">best_eval_loss</span> <span class="o">=</span> <span class="n">eval_loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="c1"># Save the params training state (and params) to disk</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mt_train_state_</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="n">LOG_STEPS</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;Loss/train&quot;</span><span class="p">,</span> <span class="n">loop_metrics</span><span class="p">[</span><span class="s2">&quot;train_loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;lr/train&quot;</span><span class="p">,</span> <span class="n">schedule</span><span class="p">(</span><span class="n">step</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">step</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="s2">&quot;epoch/train&quot;</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span><span class="n">loop_metrics</span><span class="p">)</span>
+
+<span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="implement-greedy-decoding">
+<h2>Implement Greedy Decoding<a class="headerlink" href="#implement-greedy-decoding" title="Permalink to this headline">#</a></h2>
+<p>We iteratively process the sequence through the encoder to generate the output sequence. Specifically, we will use <strong>greedy decoding</strong>: we take the token with the highest log-likelihood (logit) at each step to generate the complete output sequence.</p>
+<p>Decoding strategies are a broad research topic that we are touching only on the most naive approach. For a basic introduction to other generation strategies, please refer to <a class="reference external" href="https://huggingface.co/blog/how-to-generate">this blog post</a>.</p>
+<p><strong>🤔 Switching to Europarl?</strong></p>
+<p>By now, you should have an MT model trained on TatoEBA. We trained for you a similar model on Europarl.
+You can now decide to continue with your model or load our pretrained.</p>
+<p>If you want to load the Europarl model, run the cell below to load the checkpoint and tokenizer, and set the hyperparameters accordingly (we will download the checkpoint saved after 596000 steps. Feel free to choose any other checkpoint in the folder).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir europarl_pretrained
+curl -L https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/models/europarl/train_state_596000.pkl -o europarl_pretrained/state.pkl
+curl -L https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/models/europarl/config.json -o europarl_pretrained/config.json
+curl -L https://huggingface.co/morenolq/m2l_2022_nlp/resolve/main/models/europarl/tokenizer.json -o europarl_pretrained/tokenizer.json
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">checkpoint_file</span> <span class="o">=</span> <span class="s2">&quot;./europarl_pretrained/state.pkl&quot;</span>
+<span class="n">tokenizer_file</span> <span class="o">=</span> <span class="s2">&quot;./europarl_pretrained/tokenizer.json&quot;</span>
+
+<span class="n">NUM_LAYERS</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">NUM_HEADS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">D_MODEL</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="n">D_FF</span> <span class="o">=</span> <span class="mi">1024</span>
+<span class="n">MAX_SEQ_LEN</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">VOCAB_SIZE</span> <span class="o">=</span> <span class="mi">20_000</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">checkpoint_file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizers</span><span class="o">.</span><span class="n">Tokenizer</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">tokenizer_file</span><span class="p">)</span>
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">enable_truncation</span><span class="p">(</span><span class="n">MAX_SEQ_LEN</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s now implement the actual greedy deconding function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translate a query using the machine translation model.</span>
+<span class="sd">    This function uses the greedy decoding strategy.</span>
+
+<span class="sd">    :param params: the model parameters</span>
+<span class="sd">    :param query: the query to translate</span>
+<span class="sd">    :param tokenizer: the tokenizer</span>
+<span class="sd">    :param show_progress: whether to show the progress of the translation</span>
+<span class="sd">    :return: the translated query</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">without_apply_rng</span><span class="p">(</span><span class="n">mt_model</span><span class="p">)</span>
+    <span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span> <span class="o">=</span> <span class="n">prepare_sample</span><span class="p">(</span><span class="n">src_text</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">)</span>
+
+    <span class="n">tgt</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">token_to_id</span><span class="p">(</span><span class="s2">&quot;[BOS]&quot;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">MAX_SEQ_LEN</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Decoding&quot;</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="ow">not</span> <span class="n">show_progress</span><span class="p">):</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">deterministic_forward</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">src_mask</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">subsequent_mask</span><span class="p">(</span><span class="n">tgt</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="n">next_word</span> <span class="o">=</span> <span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
+        <span class="n">tgt</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">tgt</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">next_word</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">dtype</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">next_word</span> <span class="o">==</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">token_to_id</span><span class="p">(</span><span class="s2">&quot;[EOS]&quot;</span><span class="p">):</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tgt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; ##&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here is a simple translation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;The doctor is ready for the operation.&quot;</span>
+<span class="n">tgt</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./docs/04_transformer_decoder"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="preparation_MT.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Preparation for the MT task</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="quantitative_evaluation.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Quantitative Evaluation with BLEU</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Giuseppe Attanasio, Moreno La Quatra<br/>
+  
+      &copy; Copyright 2023.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>
