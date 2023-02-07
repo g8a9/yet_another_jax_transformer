@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>2️⃣ Implementing the Core Components &#8212; Yet Another (JAX) Transformer</title>
+    <title>(Bonus) All the glitter is not gold: Gender Bias in Machine Translation &#8212; Yet Another (JAX) Transformer</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -53,8 +53,8 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Attention Mechanism in the Transformer" href="attention.html" />
-    <link rel="prev" title="1️⃣ Introduction to The Transformer Architecture" href="../01_introduction_to_the_architecture/intro.html" />
+    <link rel="next" title="Assessing Representational Harm using WinoMT" href="representational_harm.html" />
+    <link rel="prev" title="Quantitative Evaluation with BLEU" href="../04_transformer_decoder/quantitative_evaluation.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -128,28 +128,28 @@ const thebe_selector_output = ".output, .cell_output"
    1️⃣ Introduction to The Transformer Architecture
   </a>
  </li>
- <li class="toctree-l1 current active has-children">
-  <a class="current reference internal" href="#">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../02_core_components/intro.html">
    2️⃣ Implementing the Core Components
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
   <label for="toctree-checkbox-1">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="attention.html">
+    <a class="reference internal" href="../02_core_components/attention.html">
      Attention Mechanism in the Transformer
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="multi_headed_attention.html">
+    <a class="reference internal" href="../02_core_components/multi_headed_attention.html">
      The Multi-Headed Attention
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="embedding_positional.html">
+    <a class="reference internal" href="../02_core_components/embedding_positional.html">
      Turning Tokens into Vectors: Embeddings and Positional Encoding
     </a>
    </li>
@@ -214,22 +214,22 @@ const thebe_selector_output = ".output, .cell_output"
    </li>
   </ul>
  </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="../05_gender_bias_in_MT/intro.html">
+ <li class="toctree-l1 current active has-children">
+  <a class="current reference internal" href="#">
    (
    <em>
     Bonus
    </em>
    ) All the glitter is not gold: Gender Bias in Machine Translation
   </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
   <label for="toctree-checkbox-4">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="../05_gender_bias_in_MT/representational_harm.html">
+    <a class="reference internal" href="representational_harm.html">
      Assessing Representational Harm using WinoMT
     </a>
    </li>
@@ -325,7 +325,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/02_core_components/intro.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/g8a9/Yet Another (JAX) Transformer/issues/new?title=Issue%20on%20page%20%2Fdocs/05_gender_bias_in_MT/intro.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -353,7 +353,7 @@ title="Open an issue"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="../../_sources/docs/02_core_components/intro.md"
+        <a href="../../_sources/docs/05_gender_bias_in_MT/intro.md"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -390,23 +390,60 @@ title="Print to PDF"
     </ul>
   </div>
 </div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
 
     </div>
 </div>
 
 <!-- Table of contents -->
 <div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#the-issue">
+   The issue
+  </a>
+ </li>
+</ul>
+
+    </nav>
 </div>
     </div>
     <div class="article row">
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>2️⃣ Implementing the Core Components</h1>
+                <h1>(Bonus) All the glitter is not gold: Gender Bias in Machine Translation</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#the-issue">
+   The issue
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -414,9 +451,26 @@ title="Print to PDF"
                 
               <div>
                 
-  <section class="tex2jax_ignore mathjax_ignore" id="implementing-the-core-components">
-<h1>2️⃣ Implementing the Core Components<a class="headerlink" href="#implementing-the-core-components" title="Permalink to this headline">#</a></h1>
-<p>In this section, we will implement the core modules that both the encoder and the decoder will use, i.e., Scaled Dot Product Attention, Multi-Headed Attention, Positional Encoding, and Feed-Forward Networks.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="bonus-all-the-glitter-is-not-gold-gender-bias-in-machine-translation">
+<h1>(<em>Bonus</em>) All the glitter is not gold: Gender Bias in Machine Translation<a class="headerlink" href="#bonus-all-the-glitter-is-not-gold-gender-bias-in-machine-translation" title="Permalink to this headline">#</a></h1>
+<p>In this final bonus section, we are introducing the issue of <strong>gender bias</strong> in machine translation systems.</p>
+<p>The section itself does not contain any coding exercise (if you made it so far, it is the least you earned); it is intended to <em>raise awareness of the issue</em> and let you reason and discuss mitigation strategies.
+To further stress the importance of the matter, please consider that:</p>
+<ul class="simple">
+<li><p>the data we started from, the pipeline we built, the network architecture we chose, and the way we trained it <em>are not that different</em> from those used in standard commercial MT systems and leaderboard-breaking academic models;</p></li>
+<li><p>the issue of gender bias is compellingly evident even in our simple case study trained on a relatively limited number of samples.</p></li>
+</ul>
+<section id="the-issue">
+<h2>The issue<a class="headerlink" href="#the-issue" title="Permalink to this headline">#</a></h2>
+<p>Following related literature, we define “bias,” here intended as <em>social discriminatory bias</em>, the phenomenon that arises whenever a technology we build actively or passively harms a specific individual, category, or social group. This broad definition has many possible realizations (e.g., what kind of harm is produced, to whom, to what extent – aspects often loosely defined in NLP works, see Resource 1.): here, we will frame it in the context of machine translation and discrimination against different genders.</p>
+<p>Many factors can cause an MT system to be biased, such as model design choices, data collection, or socio-cultural constructs we collect data from (e.g., consider that women uttered only one-third of the sentences listed in Europarl). We will not dive into details and refer the interested reader to Resource 2.</p>
+<p>In this section, we will use an established MT benchmarking dataset, WinoMT, to assess <strong>representational harm</strong>, i.e., whether the model is diminishing the visibility of a group (e.g., representing female references with male ones) or reinforcing social stereotypes (e.g., by associating particular jobs to women) thorough the produced translations. <em>In the remainder of the section, we will analyze gender as a binary variable (i.e., Male/Female). While we share this over-simplification with most of the relevant research on gender bias in MT, we encourage students to devise solutions to overcome it: what kind of resources or modeling solutions would improve the representation of non-binary individuals?</em></p>
+<p>To grasp what we are dealing with, let’s pause the theory for a moment and test our model on the sentence: <code class="docutils literal notranslate"><span class="pre">the</span> <span class="pre">scientist</span> <span class="pre">was</span> <span class="pre">running</span> <span class="pre">the</span> <span class="pre">experiment.</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">translate</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="s2">&quot;the scientist was running the experiment.&quot;</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Can you spot anything? (If you are not a native Italian speaker move on to the next section, or find an italian speaker to ask the same question 😉).</p>
+</section>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -434,7 +488,7 @@ title="Print to PDF"
         },
         kernelOptions: {
             kernelName: "python3",
-            path: "./docs/02_core_components"
+            path: "./docs/05_gender_bias_in_MT"
         },
         predefinedOutput: true
     }
@@ -448,17 +502,17 @@ title="Print to PDF"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="../01_introduction_to_the_architecture/intro.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="../04_transformer_decoder/quantitative_evaluation.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">1️⃣ Introduction to The Transformer Architecture</p>
+            <p class="prev-next-title">Quantitative Evaluation with BLEU</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="attention.html" title="next page">
+    <a class='right-next' id="next-link" href="representational_harm.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Attention Mechanism in the Transformer</p>
+        <p class="prev-next-title">Assessing Representational Harm using WinoMT</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
