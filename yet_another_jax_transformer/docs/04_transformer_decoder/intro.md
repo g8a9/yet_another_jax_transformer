@@ -1,4 +1,4 @@
-# 5️⃣ Transformer and Neural Machine Translation 
+# 4️⃣ Transformer and Neural Machine Translation 
 
 Until now, we focused entirely on the Encoder part of the architecture. As we have seen, one can build a Language Model that can work as a generic "encoder" of tokens and then fine-tune it.
 
