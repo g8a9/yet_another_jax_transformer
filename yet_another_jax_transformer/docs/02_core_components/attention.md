@@ -37,7 +37,7 @@ means that, after the execution, `scores` will have a shape of B, any random num
 
 📣 📣 📣
 
-As a first first exercise, you will implement the scaled dot product attention (Equation above). You will notice that the function accepts a `mask` parameter. The mask allows us to *ignore* some portion of the sequence (typically, if any padding is present).
+Let's now see the JAX implementation of the Scaled Dot Product Attention (Equation above). You will notice that the function accepts a `mask` parameter. The mask allows us to *ignore* some portion of the sequence (typically, padding tokens if present).
 
 ```python
 def scaled_dot_product(q, k, v, mask=None):
@@ -61,7 +61,7 @@ def scaled_dot_product(q, k, v, mask=None):
     return values, attention_weights
 ```
 
-We can now test our codeL
+We can now test our code.
 
 ```python
 # Testing Scaled Dot Product
